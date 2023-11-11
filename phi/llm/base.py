@@ -89,7 +89,7 @@ class LLM(BaseModel):
             self.tools = []
 
         # If the tool is a Tool or Dict, add it directly to the LLM
-        if isinstance(tool, Tool) or isinstance(tool, Dict):
+        if isinstance(tool, (Tool, Dict)):
             self.tools.append(tool)
             logger.debug(f"Added tool {tool} to LLM.")
 

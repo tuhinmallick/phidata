@@ -93,16 +93,17 @@ class PgVector(VectorDb):
             return False
 
     def create(self) -> None:
-        if not self.table_exists():
-            with self.Session() as sess:
-                with sess.begin():
-                    logger.debug("Creating extension: vector")
-                    sess.execute(text("create extension if not exists vector;"))
-                    if self.schema is not None:
-                        logger.debug(f"Creating schema: {self.schema}")
-                        sess.execute(text(f"create schema if not exists {self.schema};"))
-            logger.debug(f"Creating table: {self.collection}")
-            self.table.create(self.db_engine)
+        if self.table_exists():
+            return
+        with self.Session() as sess:
+            with sess.begin():
+                logger.debug("Creating extension: vector")
+                sess.execute(text("create extension if not exists vector;"))
+                if self.schema is not None:
+                    logger.debug(f"Creating schema: {self.schema}")
+                    sess.execute(text(f"create schema if not exists {self.schema};"))
+        logger.debug(f"Creating table: {self.collection}")
+        self.table.create(self.db_engine)
 
     def doc_exists(self, document: Document) -> bool:
         """
@@ -229,20 +230,17 @@ class PgVector(VectorDb):
                         sess.execute(text(f"SET LOCAL hnsw.ef_search  = {self.index.ef_search}"))
                 neighbors = sess.execute(stmt).fetchall() or []
 
-        # Build search results
-        search_results: List[Document] = []
-        for neighbor in neighbors:
-            search_results.append(
-                Document(
-                    name=neighbor.name,
-                    meta_data=neighbor.meta_data,
-                    content=neighbor.content,
-                    embedder=self.embedder,
-                    embedding=neighbor.embedding,
-                    usage=neighbor.usage,
-                )
+        search_results: List[Document] = [
+            Document(
+                name=neighbor.name,
+                meta_data=neighbor.meta_data,
+                content=neighbor.content,
+                embedder=self.embedder,
+                embedding=neighbor.embedding,
+                usage=neighbor.usage,
             )
-
+            for neighbor in neighbors
+        ]
         return search_results
 
     def delete(self) -> None:
@@ -258,9 +256,7 @@ class PgVector(VectorDb):
             with sess.begin():
                 stmt = select(func.count(self.table.c.name)).select_from(self.table)
                 result = sess.execute(stmt).scalar()
-                if result is not None:
-                    return int(result)
-                return 0
+                return int(result) if result is not None else 0
 
     def optimize(self) -> None:
         from math import sqrt

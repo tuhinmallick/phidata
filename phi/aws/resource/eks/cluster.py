@@ -216,8 +216,7 @@ class EksCluster(AwsResource):
                     addon_to_create = EksAddon(name=_addon, cluster_name=self.name)
 
                 if addon_to_create is not None:
-                    addon_success = addon_to_create._create(aws_client)  # type: ignore
-                    if addon_success:
+                    if addon_success := addon_to_create._create(aws_client):
                         addons_created.append(addon_to_create)
 
             # Wait for Addons to be created

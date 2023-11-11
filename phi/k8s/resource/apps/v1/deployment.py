@@ -50,7 +50,7 @@ class DeploymentSpec(K8sObject):
         # Return a V1DeploymentSpec object
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_deployment_spec.py
         _strategy = self.strategy.get_k8s_object() if self.strategy else None
-        _v1_deployment_spec = V1DeploymentSpec(
+        return V1DeploymentSpec(
             min_ready_seconds=self.min_ready_seconds,
             paused=self.paused,
             progress_deadline_seconds=self.progress_deadline_seconds,
@@ -60,7 +60,6 @@ class DeploymentSpec(K8sObject):
             strategy=_strategy,
             template=self.template.get_k8s_object(),
         )
-        return _v1_deployment_spec
 
 
 class Deployment(K8sResource):
@@ -89,15 +88,12 @@ class Deployment(K8sResource):
     def get_k8s_object(self) -> V1Deployment:
         """Creates a body for this Deployment"""
 
-        # Return a V1Deployment object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_deployment.py
-        _v1_deployment = V1Deployment(
+        return V1Deployment(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             spec=self.spec.get_k8s_object(),
         )
-        return _v1_deployment
 
     @staticmethod
     def get_from_cluster(
@@ -118,19 +114,14 @@ class Deployment(K8sResource):
             # logger.debug("Getting deploys for all namespaces")
             deploy_list = apps_v1_api.list_deployment_for_all_namespaces(**kwargs)
 
-        deploys: Optional[List[V1Deployment]] = None
-        if deploy_list:
-            deploys = deploy_list.items
-        # logger.debug(f"deploys: {deploys}")
-        # logger.debug(f"deploys type: {type(deploys)}")
-        return deploys
+        return deploy_list.items if deploy_list else None
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         apps_v1_api: AppsV1Api = k8s_client.apps_v1_api
         k8s_object: V1Deployment = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_deployment: V1Deployment = apps_v1_api.create_namespaced_deployment(
             namespace=namespace,
             body=k8s_object,
@@ -190,7 +181,7 @@ class Deployment(K8sResource):
         k8s_object: V1Deployment = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Updating: {}".format(deploy_name))
+        logger.debug(f"Updating: {deploy_name}")
         v1_deployment: V1Deployment = apps_v1_api.patch_namespaced_deployment(
             name=deploy_name,
             namespace=namespace,
@@ -211,7 +202,7 @@ class Deployment(K8sResource):
         deploy_name = self.get_resource_name()
         namespace = self.get_namespace()
 
-        logger.debug("Deleting: {}".format(deploy_name))
+        logger.debug(f"Deleting: {deploy_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = apps_v1_api.delete_namespaced_deployment(
@@ -220,7 +211,7 @@ class Deployment(K8sResource):
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("delete_status: {}".format(delete_status.status))
+        logger.debug(f"delete_status: {delete_status.status}")
         if delete_status.status == "Success":
             logger.debug("Deployment Deleted")
             return True

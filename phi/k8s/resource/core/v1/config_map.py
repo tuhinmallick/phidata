@@ -32,15 +32,12 @@ class ConfigMap(K8sResource):
     def get_k8s_object(self) -> V1ConfigMap:
         """Creates a body for this ConfigMap"""
 
-        # Return a V1ConfigMap object to create a ClusterRole
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_config_map.py
-        _v1_config_map = V1ConfigMap(
+        return V1ConfigMap(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             data=self.data,
         )
-        return _v1_config_map
 
     @staticmethod
     def get_from_cluster(
@@ -62,12 +59,7 @@ class ConfigMap(K8sResource):
             # logger.debug("Getting CMs for all namespaces")
             cm_list = core_v1_api.list_config_map_for_all_namespaces()
 
-        config_maps: Optional[List[V1ConfigMap]] = None
-        if cm_list:
-            config_maps = cm_list.items
-        # logger.debug(f"config_maps: {config_maps}")
-        # logger.debug(f"config_maps type: {type(config_maps)}")
-        return config_maps
+        return cm_list.items if cm_list else None
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         core_v1_api: CoreV1Api = k8s_client.core_v1_api
@@ -77,7 +69,7 @@ class ConfigMap(K8sResource):
         namespace = self.get_namespace()
         # logger.debug(f"namespace: {namespace}")
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_config_map: V1ConfigMap = core_v1_api.create_namespaced_config_map(
             namespace=namespace,
             body=k8s_object,
@@ -120,7 +112,7 @@ class ConfigMap(K8sResource):
         k8s_object: V1ConfigMap = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Updating: {}".format(cm_name))
+        logger.debug(f"Updating: {cm_name}")
         v1_config_map: V1ConfigMap = core_v1_api.patch_namespaced_config_map(
             name=cm_name,
             namespace=namespace,
@@ -141,7 +133,7 @@ class ConfigMap(K8sResource):
         cm_name = self.get_resource_name()
         namespace = self.get_namespace()
 
-        logger.debug("Deleting: {}".format(cm_name))
+        logger.debug(f"Deleting: {cm_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = core_v1_api.delete_namespaced_config_map(
@@ -150,7 +142,7 @@ class ConfigMap(K8sResource):
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("delete_status: {}".format(delete_status.status))
+        logger.debug(f"delete_status: {delete_status.status}")
         if delete_status.status == "Success":
             logger.debug("ConfigMap Deleted")
             return True

@@ -90,11 +90,10 @@ class AwsBedrock(LLM):
         return list_response["modelSummaries"]
 
     def get_model_ids(self) -> List[str]:
-        model_summaries: List[Dict[str, Any]] = self.get_model_summaries()
-        if len(model_summaries) == 0:
+        if model_summaries := self.get_model_summaries():
+            return [model_summary["modelId"] for model_summary in model_summaries]
+        else:
             return []
-
-        return [model_summary["modelId"] for model_summary in model_summaries]
 
     def get_model_details(self) -> Dict[str, Any]:
         model_details: dict = self.bedrock_client.get_foundation_model(modelIdentifier=self.model)
@@ -117,10 +116,7 @@ class AwsBedrock(LLM):
         )
 
         response_body = response.get("body")
-        if response_body is None:
-            return {}
-
-        return json.loads(response_body.read())
+        return {} if response_body is None else json.loads(response_body.read())
 
     def invoke_model_stream(self, prompt: str) -> Iterator[Dict[str, Any]]:
         body = {"prompt": prompt}
@@ -133,8 +129,7 @@ class AwsBedrock(LLM):
         )
 
         for event in response.get("body"):
-            chunk = event.get("chunk")
-            if chunk:
+            if chunk := event.get("chunk"):
                 yield json.loads(chunk.get("bytes").decode())
 
     def build_prompt(self, messages: List[Message]) -> str:

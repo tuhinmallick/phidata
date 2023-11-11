@@ -39,13 +39,12 @@ class CustomObject(K8sResource):
     def get_k8s_object(self) -> Dict[str, Any]:
         """Creates a body for this CustomObject"""
 
-        _v1_custom_object = {
+        return {
             "apiVersion": self.api_version.value,
             "kind": self.kind.value,
             "metadata": self.metadata.get_k8s_object().to_dict(),
             "spec": self.spec,
         }
-        return _v1_custom_object
 
     @staticmethod
     def get_from_cluster(
@@ -121,7 +120,7 @@ class CustomObject(K8sResource):
 
         print_info("Sleeping for 5 seconds so that CRDs can be registered")
         sleep(5)
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         custom_object: Dict[str, Any] = custom_objects_api.create_namespaced_custom_object(
             group=self.group,
             version=self.version,
@@ -170,7 +169,7 @@ class CustomObject(K8sResource):
         k8s_object: Dict[str, Any] = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Updating: {}".format(custom_object_name))
+        logger.debug(f"Updating: {custom_object_name}")
         custom_object: Dict[str, Any] = custom_objects_api.patch_namespaced_custom_object(
             group=self.group,
             version=self.version,
@@ -192,7 +191,7 @@ class CustomObject(K8sResource):
         custom_object_name = self.get_resource_name()
         namespace = self.get_namespace()
 
-        logger.debug("Deleting: {}".format(custom_object_name))
+        logger.debug(f"Deleting: {custom_object_name}")
         self.active_resource = None
         delete_options = V1DeleteOptions()
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
@@ -204,7 +203,7 @@ class CustomObject(K8sResource):
             name=custom_object_name,
             body=delete_options,
         )
-        logger.debug("delete_status: {}".format(delete_status))
+        logger.debug(f"delete_status: {delete_status}")
         if delete_status.get("status", None) == "Success":
             logger.debug("CustomObject Deleted")
             return True

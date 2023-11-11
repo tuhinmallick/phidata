@@ -78,8 +78,7 @@ def save(
     active_ws_config: Optional[WorkspaceConfig] = phi_config.get_active_ws_config()
     if active_ws_config is None:
         log_active_workspace_not_available()
-        avl_ws = phi_config.available_ws
-        if avl_ws:
+        if avl_ws := phi_config.available_ws:
             print_available_workspaces(avl_ws)
         return
 
@@ -94,10 +93,10 @@ def save(
                 f"Workspace at the current directory ({ws_at_current_path_dir_name}) "
                 + f"is not the Active Workspace ({active_ws_dir_name})"
             )
-            update_active_workspace = typer.confirm(
-                f"Update active workspace to {ws_at_current_path_dir_name}", default=True
-            )
-            if update_active_workspace:
+            if update_active_workspace := typer.confirm(
+                f"Update active workspace to {ws_at_current_path_dir_name}",
+                default=True,
+            ):
                 phi_config.set_active_ws_dir(ws_at_current_path.ws_root_path)
                 active_ws_config = ws_at_current_path
 

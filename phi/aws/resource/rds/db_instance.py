@@ -277,7 +277,7 @@ class DbInstance(AwsResource):
                 sg_id = sg.get_security_group_id(aws_client)
                 if sg_id is not None:
                     sg_ids.append(sg_id)
-            if len(sg_ids) > 0:
+            if sg_ids:
                 if vpc_security_group_ids is None:
                     vpc_security_group_ids = []
                 vpc_security_group_ids.extend(sg_ids)
@@ -293,15 +293,12 @@ class DbInstance(AwsResource):
         if db_subnet_group_name is not None:
             not_null_args["DBSubnetGroupName"] = db_subnet_group_name
 
-        db_name = self.get_db_name()
-        if db_name:
+        if db_name := self.get_db_name():
             not_null_args["DBName"] = db_name
 
-        master_username = self.get_master_username()
-        if master_username:
+        if master_username := self.get_master_username():
             not_null_args["MasterUsername"] = master_username
-        master_user_password = self.get_master_user_password()
-        if master_user_password:
+        if master_user_password := self.get_master_user_password():
             not_null_args["MasterUserPassword"] = master_user_password
 
         if self.allocated_storage:
@@ -556,15 +553,16 @@ class DbInstance(AwsResource):
                 sg_id = sg.get_security_group_id(aws_client)
                 if sg_id is not None:
                     sg_ids.append(sg_id)
-            if len(sg_ids) > 0:
+            if sg_ids:
                 if vpc_security_group_ids is None:
                     vpc_security_group_ids = []
                 vpc_security_group_ids.extend(sg_ids)
         # Check if vpc_security_group_ids has changed
         existing_vpc_security_group = db_instance.get("VpcSecurityGroups", [])
-        existing_vpc_security_group_ids = []
-        for existing_sg in existing_vpc_security_group:
-            existing_vpc_security_group_ids.append(existing_sg.get("VpcSecurityGroupId", None))
+        existing_vpc_security_group_ids = [
+            existing_sg.get("VpcSecurityGroupId", None)
+            for existing_sg in existing_vpc_security_group
+        ]
         if vpc_security_group_ids is not None and vpc_security_group_ids != existing_vpc_security_group_ids:
             logger.info(f"Updating SecurityGroups: {vpc_security_group_ids}")
             not_null_args["VpcSecurityGroupIds"] = vpc_security_group_ids
@@ -578,8 +576,7 @@ class DbInstance(AwsResource):
             logger.info(f"Updating DbSubnetGroup: {db_subnet_group_name}")
             not_null_args["DBSubnetGroupName"] = db_subnet_group_name
 
-        master_user_password = self.get_master_user_password()
-        if master_user_password:
+        if master_user_password := self.get_master_user_password():
             not_null_args["MasterUserPassword"] = master_user_password
 
         if self.allocated_storage:

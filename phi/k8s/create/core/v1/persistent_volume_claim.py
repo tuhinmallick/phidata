@@ -36,7 +36,7 @@ class CreatePVC(CreateK8sResource):
             labels=self.labels,
         )
 
-        pvc = PersistentVolumeClaim(
+        return PersistentVolumeClaim(
             name=pvc_name,
             api_version=ApiVersion.CORE_V1,
             kind=Kind.PERSISTENTVOLUMECLAIM,
@@ -47,12 +47,9 @@ class CreatePVC(CreateK8sResource):
             ),
             spec=PersistentVolumeClaimSpec(
                 access_modes=self.access_modes,
-                resources=ResourceRequirements(requests={"storage": self.request_storage}),
+                resources=ResourceRequirements(
+                    requests={"storage": self.request_storage}
+                ),
                 storage_class_name=self.storage_class_name,
             ),
         )
-
-        # logger.info(
-        #     f"PersistentVolumeClaim {pvc_name}:\n{pvc.json(exclude_defaults=True, indent=2)}"
-        # )
-        return pvc

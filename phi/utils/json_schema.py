@@ -11,13 +11,13 @@ def get_json_type_for_py_type(arg: str) -> str:
 
     See: https://json-schema.org/understanding-json-schema/reference/type.html#type-specific-keywords
     """
-    if arg in ("int", "float"):
+    if arg in {"int", "float"}:
         return "number"
     elif arg == "str":
         return "string"
     elif arg == "bool":
         return "boolean"
-    elif arg in ("NoneType", "None"):
+    elif arg in {"NoneType", "None"}:
         return "null"
     return arg
 
@@ -26,18 +26,15 @@ def get_json_schema_for_arg(t: Any) -> Optional[Any]:
     json_schema = None
     type_args = get_args(t)
     type_origin = get_origin(t)
-    if type_origin is not None:
-        # logger.debug(f"Type origin: {type_origin}")
-        # logger.debug(f"Type args: {type_args}")
-        if type_origin == list:
-            json_schema_for_items = get_json_schema_for_arg(type_args[0])
-            json_schema = {"type": "array", "items": json_schema_for_items}
-        elif type_origin == dict:
-            json_schema = {"type": "object", "properties": {}}
-        elif type_origin == Union:
-            json_schema = {"type": [get_json_type_for_py_type(arg.__name__) for arg in type_args]}
-    else:
+    if type_origin is None:
         json_schema = {"type": get_json_type_for_py_type(t.__name__)}
+    elif type_origin == list:
+        json_schema_for_items = get_json_schema_for_arg(type_args[0])
+        json_schema = {"type": "array", "items": json_schema_for_items}
+    elif type_origin == dict:
+        json_schema = {"type": "object", "properties": {}}
+    elif type_origin == Union:
+        json_schema = {"type": [get_json_type_for_py_type(arg.__name__) for arg in type_args]}
     return json_schema
 
 

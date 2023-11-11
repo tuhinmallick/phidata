@@ -90,8 +90,7 @@ class Kubeconfig(BaseModel):
                     logger.info(f"Reading {file_path}")
                     kubeconfig_dict = yaml.safe_load(file_path.read_text())
                     if kubeconfig_dict is not None and isinstance(kubeconfig_dict, dict):
-                        kubeconfig = cls(**kubeconfig_dict)
-                        return kubeconfig
+                        return cls(**kubeconfig_dict)
                 except Exception as e:
                     logger.error(f"Error reading {file_path}")
                     logger.error(e)

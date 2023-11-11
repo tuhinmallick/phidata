@@ -107,34 +107,32 @@ class OpenAIChat(LLM):
         return _dict
 
     def invoke_model(self, messages: List[Message]) -> ChatCompletion:
-        if get_from_env("OPENAI_API_KEY") is None:
-            logger.debug("--o-o-- Using phi-proxy")
-            try:
-                from phi.api.llm import openai_chat
-
-                response_json = openai_chat(
-                    params={
-                        "model": self.model,
-                        "messages": [m.to_dict() for m in messages],
-                        **self.api_kwargs,
-                    }
-                )
-                if response_json is None:
-                    logger.error("Error: Could not reach Phidata Servers.")
-                    logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
-                    exit(1)
-                else:
-                    return ChatCompletion.model_validate_json(response_json)
-            except Exception as e:
-                logger.exception(e)
-                logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
-                exit(1)
-        else:
+        if get_from_env("OPENAI_API_KEY") is not None:
             return self.client.chat.completions.create(
                 model=self.model,
                 messages=[m.to_dict() for m in messages],  # type: ignore
                 **self.api_kwargs,
             )
+        logger.debug("--o-o-- Using phi-proxy")
+        try:
+            from phi.api.llm import openai_chat
+
+            response_json = openai_chat(
+                params={
+                    "model": self.model,
+                    "messages": [m.to_dict() for m in messages],
+                    **self.api_kwargs,
+                }
+            )
+            if response_json is not None:
+                return ChatCompletion.model_validate_json(response_json)
+            logger.error("Error: Could not reach Phidata Servers.")
+            logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
+            exit(1)
+        except Exception as e:
+            logger.exception(e)
+            logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
+            exit(1)
 
     def invoke_model_stream(self, messages: List[Message]) -> Iterator[ChatCompletionChunk]:
         if get_from_env("OPENAI_API_KEY") is None:

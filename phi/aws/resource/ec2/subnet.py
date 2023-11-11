@@ -66,5 +66,4 @@ def get_vpc_id_from_subnet_ids(
         vpc_ids.add(_vpc)
     if len(vpc_ids) > 1:
         raise ValueError("Subnets must be in the same VPC")
-    vpc_id = vpc_ids.pop() if len(vpc_ids) == 1 else None
-    return vpc_id
+    return vpc_ids.pop() if len(vpc_ids) == 1 else None

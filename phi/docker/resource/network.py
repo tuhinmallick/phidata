@@ -40,7 +40,7 @@ class DockerNetwork(DockerResource):
         from docker import DockerClient
         from docker.models.networks import Network
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         network_name: Optional[str] = self.name
         network_object: Optional[Network] = None
 
@@ -48,10 +48,10 @@ class DockerNetwork(DockerResource):
             _api_client: DockerClient = docker_client.api_client
             network_object = _api_client.networks.create(network_name)
             if network_object is not None:
-                logger.debug("Network Created: {}".format(network_object.name))
+                logger.debug(f"Network Created: {network_object.name}")
             else:
                 logger.debug("Network could not be created")
-            # logger.debug("Network {}".format(network_object.attrs))
+                # logger.debug("Network {}".format(network_object.attrs))
         except Exception:
             raise
 
@@ -74,7 +74,7 @@ class DockerNetwork(DockerResource):
         from docker import DockerClient
         from docker.models.networks import Network
 
-        logger.debug("Reading: {}".format(self.get_resource_name()))
+        logger.debug(f"Reading: {self.get_resource_name()}")
         # Get active networks from the docker_client
         network_name: Optional[str] = self.name
         try:
@@ -101,7 +101,7 @@ class DockerNetwork(DockerResource):
         from docker.models.networks import Network
         from docker.errors import NotFound
 
-        logger.debug("Deleting: {}".format(self.get_resource_name()))
+        logger.debug(f"Deleting: {self.get_resource_name()}")
         network_object: Optional[Network] = self._read(docker_client)
         # Return True if there is no Network to delete
         if network_object is None:
@@ -112,12 +112,12 @@ class DockerNetwork(DockerResource):
             self.active_resource = None
             network_object.remove()
         except Exception as e:
-            logger.exception("Error while deleting network: {}".format(e))
+            logger.exception(f"Error while deleting network: {e}")
 
         # Validate that the network is deleted
         logger.debug("Validating network is deleted")
         try:
-            logger.debug("Reloading network_object: {}".format(network_object))
+            logger.debug(f"Reloading network_object: {network_object}")
             network_object.reload()
         except NotFound:
             logger.debug("Got NotFound Exception, Network is deleted")

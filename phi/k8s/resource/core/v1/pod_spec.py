@@ -100,29 +100,20 @@ class PodSpec(K8sObject):
 
         _containers: Optional[List[V1Container]] = None
         if self.containers:
-            _containers = []
-            for _container in self.containers:
-                _containers.append(_container.get_k8s_object())
-
+            _containers = [_container.get_k8s_object() for _container in self.containers]
         _init_containers: Optional[List[V1Container]] = None
         if self.init_containers:
-            _init_containers = []
-            for _init_container in self.init_containers:
-                _init_containers.append(_init_container.get_k8s_object())
-
+            _init_containers = [
+                _init_container.get_k8s_object()
+                for _init_container in self.init_containers
+            ]
         _image_pull_secrets = None
         if self.image_pull_secrets:
-            _image_pull_secrets = []
-            for ips in self.image_pull_secrets:
-                _image_pull_secrets.append(ips.get_k8s_object())
-
+            _image_pull_secrets = [ips.get_k8s_object() for ips in self.image_pull_secrets]
         _volumes: Optional[List[V1Volume]] = None
         if self.volumes:
-            _volumes = []
-            for _volume in self.volumes:
-                _volumes.append(_volume.get_k8s_object())
-
-        _v1_pod_spec = V1PodSpec(
+            _volumes = [_volume.get_k8s_object() for _volume in self.volumes]
+        return V1PodSpec(
             active_deadline_seconds=self.active_deadline_seconds,
             affinity=self.affinity,
             automount_service_account_token=self.automount_service_account_token,
@@ -133,9 +124,10 @@ class PodSpec(K8sObject):
             init_containers=_init_containers,
             node_name=self.node_name,
             node_selector=self.node_selector,
-            restart_policy=self.restart_policy.value if self.restart_policy else None,
+            restart_policy=self.restart_policy.value
+            if self.restart_policy
+            else None,
             service_account_name=self.service_account_name,
             termination_grace_period_seconds=self.termination_grace_period_seconds,
             volumes=_volumes,
         )
-        return _v1_pod_spec

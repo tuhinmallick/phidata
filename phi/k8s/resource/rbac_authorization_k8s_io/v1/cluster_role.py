@@ -25,14 +25,11 @@ class PolicyRule(K8sObject):
     verbs: List[str]
 
     def get_k8s_object(self) -> V1PolicyRule:
-        # Return a V1PolicyRule object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_policy_rule.py
-        _v1_policy_rule = V1PolicyRule(
+        return V1PolicyRule(
             api_groups=self.api_groups,
             resources=self.resources,
             verbs=self.verbs,
         )
-        return _v1_policy_rule
 
 
 class ClusterRole(K8sResource):
@@ -59,16 +56,12 @@ class ClusterRole(K8sResource):
             for rules in self.rules:
                 rules_list.append(rules.get_k8s_object())
 
-        # Return a V1ClusterRole object to create a ClusterRole
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_cluster_role.py
-        _v1_cluster_role = V1ClusterRole(
+        return V1ClusterRole(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             rules=rules_list,
         )
-
-        return _v1_cluster_role
 
     @staticmethod
     def get_from_cluster(
@@ -81,19 +74,17 @@ class ClusterRole(K8sResource):
             namespace: NOT USED.
         """
         rbac_auth_v1_api: RbacAuthorizationV1Api = k8s_client.rbac_auth_v1_api
-        cr_list: Optional[V1ClusterRoleList] = rbac_auth_v1_api.list_cluster_role(**kwargs)
-        crs: Optional[List[V1ClusterRole]] = None
-        if cr_list:
-            crs = cr_list.items
-            # logger.debug(f"crs: {crs}")
-            # logger.debug(f"crs type: {type(crs)}")
-        return crs
+        return (
+            cr_list.items
+            if (cr_list := rbac_auth_v1_api.list_cluster_role(**kwargs))
+            else None
+        )
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         rbac_auth_v1_api: RbacAuthorizationV1Api = k8s_client.rbac_auth_v1_api
         k8s_object: V1ClusterRole = self.get_k8s_object()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_cluster_role: V1ClusterRole = rbac_auth_v1_api.create_cluster_role(
             body=k8s_object,
             async_req=self.async_req,
@@ -132,7 +123,7 @@ class ClusterRole(K8sResource):
         cr_name = self.get_resource_name()
         k8s_object: V1ClusterRole = self.get_k8s_object()
 
-        logger.debug("Updating: {}".format(cr_name))
+        logger.debug(f"Updating: {cr_name}")
         v1_cluster_role: V1ClusterRole = rbac_auth_v1_api.patch_cluster_role(
             name=cr_name,
             body=k8s_object,
@@ -151,7 +142,7 @@ class ClusterRole(K8sResource):
         rbac_auth_v1_api: RbacAuthorizationV1Api = k8s_client.rbac_auth_v1_api
         cr_name = self.get_resource_name()
 
-        logger.debug("Deleting: {}".format(cr_name))
+        logger.debug(f"Deleting: {cr_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = rbac_auth_v1_api.delete_cluster_role(
@@ -159,7 +150,7 @@ class ClusterRole(K8sResource):
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("delete_status: {}".format(delete_status.status))
+        logger.debug(f"delete_status: {delete_status.status}")
         if delete_status.status == "Success":
             logger.debug("ClusterRole Deleted")
             return True

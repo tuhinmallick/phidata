@@ -27,7 +27,7 @@ class CreateConfigMap(CreateK8sResource):
             labels=self.labels,
         )
 
-        configmap = ConfigMap(
+        return ConfigMap(
             name=cm_name,
             api_version=ApiVersion.CORE_V1,
             kind=Kind.CONFIGMAP,
@@ -38,8 +38,3 @@ class CreateConfigMap(CreateK8sResource):
             ),
             data=self.data,
         )
-
-        # logger.debug(
-        #     f"ConfigMap {cm_name}:\n{configmap.json(exclude_defaults=True, indent=2)}"
-        # )
-        return configmap

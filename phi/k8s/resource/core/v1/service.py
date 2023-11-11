@@ -71,12 +71,7 @@ class ServicePort(K8sObject):
                 pass
 
         target_port = target_port_int or self.target_port
-        # logger.info(f"target_port         : {type(self.target_port)} | {self.target_port}")
-        # logger.info(f"target_port updated : {type(target_port)} | {target_port}")
-
-        # Return a V1ServicePort object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_service_port.py
-        _v1_service_port = V1ServicePort(
+        return V1ServicePort(
             name=self.name,
             node_port=self.node_port,
             port=self.port,
@@ -84,7 +79,6 @@ class ServicePort(K8sObject):
             target_port=target_port,
             app_protocol=self.app_protocol,
         )
-        return _v1_service_port
 
 
 class ServiceSpec(K8sObject):
@@ -197,11 +191,8 @@ class ServiceSpec(K8sObject):
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_service_spec.py
         _ports: Optional[List[V1ServicePort]] = None
         if self.ports:
-            _ports = []
-            for _port in self.ports:
-                _ports.append(_port.get_k8s_object())
-
-        _v1_service_spec = V1ServiceSpec(
+            _ports = [_port.get_k8s_object() for _port in self.ports]
+        return V1ServiceSpec(
             type=self.type.value if self.type else None,
             allocate_load_balancer_node_ports=self.allocate_load_balancer_node_ports,
             cluster_ip=self.cluster_ip,
@@ -222,7 +213,6 @@ class ServiceSpec(K8sObject):
             # ip_family_policy=self.ip_family_policy,
             # session_affinity_config=self.session_affinity_config,
         )
-        return _v1_service_spec
 
 
 class Service(K8sResource):
@@ -251,15 +241,12 @@ class Service(K8sResource):
     def get_k8s_object(self) -> V1Service:
         """Creates a body for this Service"""
 
-        # Return a V1Service object to create a ClusterRole
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_service.py
-        _v1_service = V1Service(
+        return V1Service(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             spec=self.spec.get_k8s_object(),
         )
-        return _v1_service
 
     @staticmethod
     def get_from_cluster(
@@ -280,19 +267,14 @@ class Service(K8sResource):
             # logger.debug("Getting services for all namespaces")
             svc_list = core_v1_api.list_service_for_all_namespaces()
 
-        services: Optional[List[V1Service]] = None
-        if svc_list:
-            services = svc_list.items
-        # logger.debug(f"services: {services}")
-        # logger.debug(f"services type: {type(services)}")
-        return services
+        return svc_list.items if svc_list else None
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         core_v1_api: CoreV1Api = k8s_client.core_v1_api
         k8s_object: V1Service = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_service: V1Service = core_v1_api.create_namespaced_service(
             namespace=namespace,
             body=k8s_object,
@@ -365,7 +347,7 @@ class Service(K8sResource):
         k8s_object: V1Service = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Updating: {}".format(svc_name))
+        logger.debug(f"Updating: {svc_name}")
         v1_service: V1Service = core_v1_api.patch_namespaced_service(
             name=svc_name,
             namespace=namespace,
@@ -386,7 +368,7 @@ class Service(K8sResource):
         svc_name = self.get_resource_name()
         namespace = self.get_namespace()
 
-        logger.debug("Deleting: {}".format(svc_name))
+        logger.debug(f"Deleting: {svc_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = core_v1_api.delete_namespaced_service(

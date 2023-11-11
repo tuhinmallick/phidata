@@ -304,9 +304,7 @@ class PhiAI:
 
     def get_latest_conversation(self) -> Optional[Dict[str, Any]]:
         conversations = self.get_all_conversations()
-        if len(conversations) == 0:
-            return None
-        return conversations[0]
+        return None if len(conversations) == 0 else conversations[0]
 
     # async def conversation(self, stream: bool = False):
     #     from rich import box

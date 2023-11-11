@@ -58,16 +58,14 @@ class CreateContainer(CreateK8sObject):
 
         container_ports: Optional[List[ContainerPort]] = None
         if self.ports:
-            container_ports = []
-            for _port in self.ports:
-                container_ports.append(
-                    ContainerPort(
-                        name=_port.name,
-                        container_port=_port.container_port,
-                        protocol=_port.protocol,
-                    )
+            container_ports = [
+                ContainerPort(
+                    name=_port.name,
+                    container_port=_port.container_port,
+                    protocol=_port.protocol,
                 )
-
+                for _port in self.ports
+            ]
         env_from: Optional[List[EnvFromSource]] = None
         if self.envs_from_configmap:
             if env_from is None:
@@ -127,16 +125,14 @@ class CreateContainer(CreateK8sObject):
 
         volume_mounts: Optional[List[VolumeMount]] = None
         if self.volumes:
-            volume_mounts = []
-            for _volume in self.volumes:
-                volume_mounts.append(
-                    VolumeMount(
-                        name=_volume.volume_name,
-                        mount_path=_volume.mount_path,
-                    )
+            volume_mounts = [
+                VolumeMount(
+                    name=_volume.volume_name,
+                    mount_path=_volume.mount_path,
                 )
-
-        container_resource = Container(
+                for _volume in self.volumes
+            ]
+        return Container(
             name=container_name,
             image=get_image_str(self.image_name, self.image_tag),
             image_pull_policy=self.image_pull_policy,
@@ -147,4 +143,3 @@ class CreateContainer(CreateK8sObject):
             env=env,
             volume_mounts=volume_mounts,
         )
-        return container_resource

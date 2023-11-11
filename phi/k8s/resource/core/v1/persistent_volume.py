@@ -93,9 +93,7 @@ class PersistentVolumeSpec(K8sObject):
     def get_k8s_object(
         self,
     ) -> V1PersistentVolumeSpec:
-        # Return a V1PersistentVolumeSpec object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_persistent_volume_spec.py
-        _v1_persistent_volume_spec = V1PersistentVolumeSpec(
+        return V1PersistentVolumeSpec(
             access_modes=[access_mode.value for access_mode in self.access_modes],
             capacity=self.capacity,
             mount_options=self.mount_options,
@@ -106,10 +104,13 @@ class PersistentVolumeSpec(K8sObject):
             host_path=self.host_path.get_k8s_object() if self.host_path else None,
             nfs=self.nfs.get_k8s_object() if self.nfs else None,
             claim_ref=self.claim_ref.get_k8s_object() if self.claim_ref else None,
-            gce_persistent_disk=self.gce_persistent_disk.get_k8s_object() if self.gce_persistent_disk else None,
-            node_affinity=self.node_affinity.get_k8s_object() if self.node_affinity else None,
+            gce_persistent_disk=self.gce_persistent_disk.get_k8s_object()
+            if self.gce_persistent_disk
+            else None,
+            node_affinity=self.node_affinity.get_k8s_object()
+            if self.node_affinity
+            else None,
         )
-        return _v1_persistent_volume_spec
 
 
 class PersistentVolume(K8sResource):
@@ -146,15 +147,12 @@ class PersistentVolume(K8sResource):
     def get_k8s_object(self) -> V1PersistentVolume:
         """Creates a body for this PVC"""
 
-        # Return a V1PersistentVolume object to create a ClusterRole
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_persistent_volume.py
-        _v1_persistent_volume = V1PersistentVolume(
+        return V1PersistentVolume(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             spec=self.spec.get_k8s_object(),
         )
-        return _v1_persistent_volume
 
     @staticmethod
     def get_from_cluster(
@@ -179,7 +177,7 @@ class PersistentVolume(K8sResource):
         core_v1_api: CoreV1Api = k8s_client.core_v1_api
         k8s_object: V1PersistentVolume = self.get_k8s_object()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_persistent_volume: V1PersistentVolume = core_v1_api.create_persistent_volume(
             body=k8s_object,
             async_req=self.async_req,
@@ -218,7 +216,7 @@ class PersistentVolume(K8sResource):
         pv_name = self.get_resource_name()
         k8s_object: V1PersistentVolume = self.get_k8s_object()
 
-        logger.debug("Updating: {}".format(pv_name))
+        logger.debug(f"Updating: {pv_name}")
         v1_persistent_volume: V1PersistentVolume = core_v1_api.patch_persistent_volume(
             name=pv_name,
             body=k8s_object,
@@ -237,7 +235,7 @@ class PersistentVolume(K8sResource):
         core_v1_api: CoreV1Api = k8s_client.core_v1_api
         pv_name = self.get_resource_name()
 
-        logger.debug("Deleting: {}".format(pv_name))
+        logger.debug(f"Deleting: {pv_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = core_v1_api.delete_persistent_volume(

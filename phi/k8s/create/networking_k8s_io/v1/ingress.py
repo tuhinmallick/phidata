@@ -37,7 +37,7 @@ class CreateIngress(CreateK8sResource):
             labels=self.labels,
         )
 
-        ingress = Ingress(
+        return Ingress(
             name=ingress_name,
             api_version=ApiVersion.NETWORKING_V1,
             kind=Kind.INGRESS,
@@ -54,8 +54,3 @@ class CreateIngress(CreateK8sResource):
                 tls=self.tls,
             ),
         )
-
-        # logger.debug(
-        #     f"Ingress {ingress_name}:\n{ingress.json(exclude_defaults=True, indent=2)}"
-        # )
-        return ingress

@@ -52,17 +52,9 @@ class ServiceAccount(K8sResource):
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_service_account.py
         _image_pull_secrets = None
         if self.image_pull_secrets:
-            _image_pull_secrets = []
-            for ips in self.image_pull_secrets:
-                _image_pull_secrets.append(ips.get_k8s_object())
-
-        _secrets = None
-        if self.secrets:
-            _secrets = []
-            for s in self.secrets:
-                _secrets.append(s.get_k8s_object())
-
-        _v1_service_account = V1ServiceAccount(
+            _image_pull_secrets = [ips.get_k8s_object() for ips in self.image_pull_secrets]
+        _secrets = [s.get_k8s_object() for s in self.secrets] if self.secrets else None
+        return V1ServiceAccount(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
@@ -70,7 +62,6 @@ class ServiceAccount(K8sResource):
             image_pull_secrets=_image_pull_secrets,
             secrets=_secrets,
         )
-        return _v1_service_account
 
     @staticmethod
     def get_from_cluster(
@@ -91,20 +82,14 @@ class ServiceAccount(K8sResource):
             # logger.debug("Getting SAs for all namespaces")
             sa_list = core_v1_api.list_service_account_for_all_namespaces()
 
-        sas: Optional[List[V1ServiceAccount]] = None
-        if sa_list:
-            sas = sa_list.items
-        # logger.debug(f"sas: {sas}")
-        # logger.debug(f"sas type: {type(sas)}")
-
-        return sas
+        return sa_list.items if sa_list else None
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         core_v1_api: CoreV1Api = k8s_client.core_v1_api
         k8s_object: V1ServiceAccount = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_service_account: V1ServiceAccount = core_v1_api.create_namespaced_service_account(
             body=k8s_object,
             namespace=namespace,
@@ -146,7 +131,7 @@ class ServiceAccount(K8sResource):
         sa_name = self.get_resource_name()
         k8s_object: V1ServiceAccount = self.get_k8s_object()
         namespace = self.get_namespace()
-        logger.debug("Updating: {}".format(sa_name))
+        logger.debug(f"Updating: {sa_name}")
 
         v1_service_account: V1ServiceAccount = core_v1_api.patch_namespaced_service_account(
             name=sa_name,
@@ -168,7 +153,7 @@ class ServiceAccount(K8sResource):
         sa_name = self.get_resource_name()
         namespace = self.get_namespace()
 
-        logger.debug("Deleting: {}".format(sa_name))
+        logger.debug(f"Deleting: {sa_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1ServiceAccount = core_v1_api.delete_namespaced_service_account(

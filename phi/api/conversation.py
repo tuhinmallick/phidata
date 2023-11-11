@@ -39,11 +39,7 @@ def create_conversation_monitor(monitor: ConversationMonitorCreate) -> bool:
                 return False
 
             response_json: Union[Dict, List] = r.json()
-            if response_json is None:
-                return False
-
-            # logger.debug(f"Response: {response_json}")
-            return True
+            return response_json is not None
         except Exception as e:
             logger.debug(f"Could not create conversation monitor: {e}")
     return False
@@ -72,11 +68,7 @@ def create_conversation_event(conversation: ConversationEventCreate) -> bool:
                 return False
 
             response_json: Union[Dict, List] = r.json()
-            if response_json is None:
-                return False
-
-            # logger.debug(f"Response: {response_json}")
-            return True
+            return response_json is not None
         except Exception as e:
             logger.debug(f"Could not log conversation event: {e}")
     return False

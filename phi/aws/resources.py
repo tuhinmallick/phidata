@@ -140,7 +140,7 @@ class AwsResources(InfraResources):
                         apps_to_create.append(app)
 
         # Get the list of AwsResources from the AwsApps
-        if len(apps_to_create) > 0:
+        if apps_to_create:
             logger.debug(f"Found {len(apps_to_create)} apps to create")
             for app in apps_to_create:
                 app.set_workspace_settings(workspace_settings=self.workspace_settings)
@@ -160,16 +160,22 @@ class AwsResources(InfraResources):
                                     )
                                 )
                                 if len(dep_resources) > 0:
-                                    for dep_resource in dep_resources:
-                                        if isinstance(dep_resource, AwsResource):
-                                            resources_to_create.append(dep_resource)
+                                    resources_to_create.extend(
+                                        dep_resource
+                                        for dep_resource in dep_resources
+                                        if isinstance(dep_resource, AwsResource)
+                                    )
                     # Add the resources from the app to the list of resources to create
-                    for app_resource in app_resources:
-                        if isinstance(app_resource, AwsResource) and app_resource.should_create(
-                            group_filter=group_filter, name_filter=name_filter, type_filter=type_filter
-                        ):
-                            resources_to_create.append(app_resource)
-
+                    resources_to_create.extend(
+                        app_resource
+                        for app_resource in app_resources
+                        if isinstance(app_resource, AwsResource)
+                        and app_resource.should_create(
+                            group_filter=group_filter,
+                            name_filter=name_filter,
+                            type_filter=type_filter,
+                        )
+                    )
         # Sort the AwsResources in install order
         resources_to_create.sort(key=lambda x: AwsResourceInstallOrder.get(x.__class__.__name__, 5000))
 
@@ -192,16 +198,10 @@ class AwsResources(InfraResources):
                             logger.debug(f"-*- Adding {dep.name}, dependency of {aws_resource.name}")
                             final_aws_resources.append(dep)
 
-                # Add the resource to be created after its dependencies
-                if aws_resource not in final_aws_resources:
-                    logger.debug(f"-*- Adding {aws_resource.name}")
-                    final_aws_resources.append(aws_resource)
-            else:
-                # Add the resource to be created if it has no dependencies
-                if aws_resource not in final_aws_resources:
-                    logger.debug(f"-*- Adding {aws_resource.name}")
-                    final_aws_resources.append(aws_resource)
-
+            # Add the resource to be created after its dependencies
+            if aws_resource not in final_aws_resources:
+                logger.debug(f"-*- Adding {aws_resource.name}")
+                final_aws_resources.append(aws_resource)
         # Track the total number of AwsResources to create for validation
         num_resources_to_create: int = len(final_aws_resources)
         num_resources_created: int = 0
@@ -247,9 +247,8 @@ class AwsResources(InfraResources):
                 _resource_created = resource.create(aws_client=self.aws_client)
                 if _resource_created:
                     num_resources_created += 1
-                else:
-                    if self.workspace_settings is not None and not self.workspace_settings.continue_on_create_failure:
-                        return num_resources_created, num_resources_to_create
+                elif self.workspace_settings is not None and not self.workspace_settings.continue_on_create_failure:
+                    return num_resources_created, num_resources_to_create
             except Exception as e:
                 logger.error(f"Failed to create {resource.get_resource_type()}: {resource.get_resource_name()}")
                 logger.error(e)
@@ -328,7 +327,7 @@ class AwsResources(InfraResources):
                         apps_to_delete.append(app)
 
         # Get the list of AwsResources from the AwsApps
-        if len(apps_to_delete) > 0:
+        if apps_to_delete:
             logger.debug(f"Found {len(apps_to_delete)} apps to delete")
             for app in apps_to_delete:
                 app.set_workspace_settings(workspace_settings=self.workspace_settings)
@@ -336,12 +335,16 @@ class AwsResources(InfraResources):
                     build_context=AwsBuildContext(aws_region=self.aws_region, aws_profile=self.aws_profile)
                 )
                 if len(app_resources) > 0:
-                    for app_resource in app_resources:
-                        if isinstance(app_resource, AwsResource) and app_resource.should_delete(
-                            group_filter=group_filter, name_filter=name_filter, type_filter=type_filter
-                        ):
-                            resources_to_delete.append(app_resource)
-
+                    resources_to_delete.extend(
+                        app_resource
+                        for app_resource in app_resources
+                        if isinstance(app_resource, AwsResource)
+                        and app_resource.should_delete(
+                            group_filter=group_filter,
+                            name_filter=name_filter,
+                            type_filter=type_filter,
+                        )
+                    )
         # Sort the AwsResources in install order
         resources_to_delete.sort(key=lambda x: AwsResourceInstallOrder.get(x.__class__.__name__, 5000), reverse=True)
 
@@ -377,11 +380,9 @@ class AwsResources(InfraResources):
                         if dep not in final_aws_resources:
                             logger.debug(f"-*- Adding {dep.name}, dependency of {aws_resource.name}")
                             final_aws_resources.append(dep)
-            else:
-                # Add the resource to be deleted if it has no dependencies
-                if aws_resource not in final_aws_resources:
-                    logger.debug(f"-*- Adding {aws_resource.name}")
-                    final_aws_resources.append(aws_resource)
+            elif aws_resource not in final_aws_resources:
+                logger.debug(f"-*- Adding {aws_resource.name}")
+                final_aws_resources.append(aws_resource)
 
         # Track the total number of AwsResources to delete for validation
         num_resources_to_delete: int = len(final_aws_resources)
@@ -428,9 +429,8 @@ class AwsResources(InfraResources):
                 _resource_deleted = resource.delete(aws_client=self.aws_client)
                 if _resource_deleted:
                     num_resources_deleted += 1
-                else:
-                    if self.workspace_settings is not None and not self.workspace_settings.continue_on_delete_failure:
-                        return num_resources_deleted, num_resources_to_delete
+                elif self.workspace_settings is not None and not self.workspace_settings.continue_on_delete_failure:
+                    return num_resources_deleted, num_resources_to_delete
             except Exception as e:
                 logger.error(f"Failed to delete {resource.get_resource_type()}: {resource.get_resource_name()}")
                 logger.error(e)
@@ -509,7 +509,7 @@ class AwsResources(InfraResources):
                         apps_to_update.append(app)
 
         # Get the list of AwsResources from the AwsApps
-        if len(apps_to_update) > 0:
+        if apps_to_update:
             logger.debug(f"Found {len(apps_to_update)} apps to update")
             for app in apps_to_update:
                 app.set_workspace_settings(workspace_settings=self.workspace_settings)
@@ -517,12 +517,16 @@ class AwsResources(InfraResources):
                     build_context=AwsBuildContext(aws_region=self.aws_region, aws_profile=self.aws_profile)
                 )
                 if len(app_resources) > 0:
-                    for app_resource in app_resources:
-                        if isinstance(app_resource, AwsResource) and app_resource.should_update(
-                            group_filter=group_filter, name_filter=name_filter, type_filter=type_filter
-                        ):
-                            resources_to_update.append(app_resource)
-
+                    resources_to_update.extend(
+                        app_resource
+                        for app_resource in app_resources
+                        if isinstance(app_resource, AwsResource)
+                        and app_resource.should_update(
+                            group_filter=group_filter,
+                            name_filter=name_filter,
+                            type_filter=type_filter,
+                        )
+                    )
         # Sort the AwsResources in install order
         resources_to_update.sort(key=lambda x: AwsResourceInstallOrder.get(x.__class__.__name__, 5000))
 
@@ -545,16 +549,10 @@ class AwsResources(InfraResources):
                             logger.debug(f"-*- Adding {dep.name}, dependency of {aws_resource.name}")
                             final_aws_resources.append(dep)
 
-                # Add the resource to be created after its dependencies
-                if aws_resource not in final_aws_resources:
-                    logger.debug(f"-*- Adding {aws_resource.name}")
-                    final_aws_resources.append(aws_resource)
-            else:
-                # Add the resource to be created if it has no dependencies
-                if aws_resource not in final_aws_resources:
-                    logger.debug(f"-*- Adding {aws_resource.name}")
-                    final_aws_resources.append(aws_resource)
-
+            # Add the resource to be created after its dependencies
+            if aws_resource not in final_aws_resources:
+                logger.debug(f"-*- Adding {aws_resource.name}")
+                final_aws_resources.append(aws_resource)
         # Track the total number of AwsResources to update for validation
         num_resources_to_update: int = len(final_aws_resources)
         num_resources_updated: int = 0
@@ -600,9 +598,8 @@ class AwsResources(InfraResources):
                 _resource_updated = resource.update(aws_client=self.aws_client)
                 if _resource_updated:
                     num_resources_updated += 1
-                else:
-                    if self.workspace_settings is not None and not self.workspace_settings.continue_on_patch_failure:
-                        return num_resources_updated, num_resources_to_update
+                elif self.workspace_settings is not None and not self.workspace_settings.continue_on_patch_failure:
+                    return num_resources_updated, num_resources_to_update
             except Exception as e:
                 logger.error(f"Failed to update {resource.get_resource_type()}: {resource.get_resource_name()}")
                 logger.error(e)

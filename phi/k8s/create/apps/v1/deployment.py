@@ -97,7 +97,7 @@ class CreateDeployment(CreateK8sResource):
                 if volume and isinstance(volume, Volume):
                     volumes.append(volume)
 
-        deployment = Deployment(
+        return Deployment(
             name=deploy_name,
             api_version=ApiVersion.APPS_V1,
             kind=Kind.DEPLOYMENT,
@@ -131,8 +131,3 @@ class CreateDeployment(CreateK8sResource):
             ),
             recreate_on_update=self.recreate_on_update,
         )
-
-        # logger.debug(
-        #     f"Deployment {deploy_name}:\n{deployment.json(exclude_defaults=True, indent=2)}"
-        # )
-        return deployment

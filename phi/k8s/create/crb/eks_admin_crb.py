@@ -32,16 +32,15 @@ def create_eks_admin_crb(
 
     subjects: List[Subject] = []
     if service_accounts is not None and isinstance(service_accounts, list):
-        for sa in service_accounts:
-            subjects.append(Subject(kind=Kind.SERVICEACCOUNT, name=sa))
+        subjects.extend(
+            Subject(kind=Kind.SERVICEACCOUNT, name=sa)
+            for sa in service_accounts
+        )
     if users is not None and isinstance(users, list):
-        for user in users:
-            subjects.append(Subject(kind=Kind.USER, name=user))
+        subjects.extend(Subject(kind=Kind.USER, name=user) for user in users)
     if groups is not None and isinstance(groups, list):
-        for group in groups:
-            subjects.append(Subject(kind=Kind.GROUP, name=group))
-
-    if len(subjects) == 0:
+        subjects.extend(Subject(kind=Kind.GROUP, name=group) for group in groups)
+    if not subjects:
         logger.error(f"No subjects for ClusterRoleBinding: {name}")
         return None
 

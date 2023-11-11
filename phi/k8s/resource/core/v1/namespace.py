@@ -24,12 +24,9 @@ class NamespaceSpec(K8sObject):
     finalizers: Optional[List[str]] = None
 
     def get_k8s_object(self) -> V1NamespaceSpec:
-        # Return a V1NamespaceSpec object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_namespace_spec.py
-        _v1_namespace_spec = V1NamespaceSpec(
+        return V1NamespaceSpec(
             finalizers=self.finalizers,
         )
-        return _v1_namespace_spec
 
 
 class Namespace(K8sResource):
@@ -53,15 +50,12 @@ class Namespace(K8sResource):
     def get_k8s_object(self) -> V1Namespace:
         """Creates a body for this Namespace"""
 
-        # Return a V1Namespace object to create a ClusterRole
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_namespace.py
-        _v1_namespace = V1Namespace(
+        return V1Namespace(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             spec=self.spec.get_k8s_object() if self.spec is not None else None,
         )
-        return _v1_namespace
 
     @staticmethod
     def get_from_cluster(
@@ -74,27 +68,23 @@ class Namespace(K8sResource):
             namespace: Namespace to use.
         """
         core_v1_api: CoreV1Api = k8s_client.core_v1_api
-        # logger.debug("Getting all Namespaces")
-        ns_list: Optional[V1NamespaceList] = core_v1_api.list_namespace()
-
-        namespaces: Optional[List[V1Namespace]] = None
-        if ns_list:
-            namespaces = [ns for ns in ns_list.items if ns.status.phase == "Active"]
-        # logger.debug(f"namespaces: {namespaces}")
-        # logger.debug(f"namespaces type: {type(namespaces)}")
-        return namespaces
+        return (
+            [ns for ns in ns_list.items if ns.status.phase == "Active"]
+            if (ns_list := core_v1_api.list_namespace())
+            else None
+        )
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         core_v1_api: CoreV1Api = k8s_client.core_v1_api
         k8s_object: V1Namespace = self.get_k8s_object()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_namespace: V1Namespace = core_v1_api.create_namespace(
             body=k8s_object,
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("Created: {}".format(v1_namespace))
+        logger.debug(f"Created: {v1_namespace}")
         if v1_namespace.metadata.creation_timestamp is not None:
             logger.debug("Namespace Created")
             self.active_resource = v1_namespace  # logger.debug(f"Init
@@ -127,7 +117,7 @@ class Namespace(K8sResource):
         ns_name = self.get_resource_name()
         k8s_object: V1Namespace = self.get_k8s_object()
 
-        logger.debug("Updating: {}".format(ns_name))
+        logger.debug(f"Updating: {ns_name}")
         v1_namespace: V1Namespace = core_v1_api.patch_namespace(
             name=ns_name,
             body=k8s_object,
@@ -146,7 +136,7 @@ class Namespace(K8sResource):
         core_v1_api: CoreV1Api = k8s_client.core_v1_api
         ns_name = self.get_resource_name()
 
-        logger.debug("Deleting: {}".format(ns_name))
+        logger.debug(f"Deleting: {ns_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = core_v1_api.delete_namespace(
@@ -154,7 +144,7 @@ class Namespace(K8sResource):
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("delete_status: {}".format(delete_status.status))
+        logger.debug(f"delete_status: {delete_status.status}")
         if delete_status.status == "Success":
             logger.debug("Namespace Deleted")
             return True

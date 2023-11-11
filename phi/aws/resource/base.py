@@ -100,7 +100,7 @@ class AwsResource(ResourceBase):
     def is_active(self, aws_client: AwsApiClient) -> bool:
         """Returns True if the resource is active on Aws"""
         _resource = self.read(aws_client=aws_client)
-        return True if _resource is not None else False
+        return _resource is not None
 
     def _create(self, aws_client: AwsApiClient) -> bool:
         logger.warning(f"@_create method not defined for {self.get_resource_name()}")

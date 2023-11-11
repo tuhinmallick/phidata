@@ -169,7 +169,7 @@ class SupersetBase(K8sApp):
             if python_path is None:
                 python_path = container_context.workspace_root
                 if self.add_python_paths is not None:
-                    python_path = "{}:{}".format(python_path, ":".join(self.add_python_paths))
+                    python_path = f'{python_path}:{":".join(self.add_python_paths)}'
             if python_path is not None:
                 container_env[PYTHONPATH_ENV_VAR] = python_path
 

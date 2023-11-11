@@ -140,8 +140,7 @@ def ping(
     from phi.api.user import user_ping
     from phi.cli.console import print_info
 
-    ping_success = user_ping()
-    if ping_success:
+    if ping_success := user_ping():
         print_info("Ping successful")
     else:
         print_info("Could not ping phidata servers")
@@ -265,10 +264,10 @@ def ai(
             log_phi_init_failed_msg()
             return False
         phi_config = PhiCliConfig.from_saved_config()
-        # If phi_config is still None, throw an error
-        if not phi_config:
-            log_config_not_available_msg()
-            return False
+    # If phi_config is still None, throw an error
+    if not phi_config:
+        log_config_not_available_msg()
+        return False
 
     phi_ai_conversation(
         phi_config=phi_config,

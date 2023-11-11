@@ -31,9 +31,7 @@ class Secret(K8sResource):
     def get_k8s_object(self) -> V1Secret:
         """Creates a body for this Secret"""
 
-        # Return a V1Secret object to create a ClusterRole
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_secret.py
-        _v1_secret = V1Secret(
+        return V1Secret(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
@@ -41,7 +39,6 @@ class Secret(K8sResource):
             string_data=self.string_data,
             type=self.type,
         )
-        return _v1_secret
 
     @staticmethod
     def get_from_cluster(
@@ -62,19 +59,14 @@ class Secret(K8sResource):
             # logger.debug("Getting Secrets for all namespaces")
             secret_list = core_v1_api.list_secret_for_all_namespaces()
 
-        secrets: Optional[List[V1Secret]] = None
-        if secret_list:
-            secrets = secret_list.items
-        # logger.debug(f"secrets: {secrets}")
-        # logger.debug(f"secrets type: {type(secrets)}")
-        return secrets
+        return secret_list.items if secret_list else None
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         core_v1_api: CoreV1Api = k8s_client.core_v1_api
         k8s_object: V1Secret = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_secret: V1Secret = core_v1_api.create_namespaced_secret(
             namespace=namespace,
             body=k8s_object,
@@ -117,7 +109,7 @@ class Secret(K8sResource):
         k8s_object: V1Secret = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Updating: {}".format(secret_name))
+        logger.debug(f"Updating: {secret_name}")
         v1_secret: V1Secret = core_v1_api.patch_namespaced_secret(
             name=secret_name,
             namespace=namespace,
@@ -138,7 +130,7 @@ class Secret(K8sResource):
         secret_name = self.get_resource_name()
         namespace = self.get_namespace()
 
-        logger.debug("Deleting: {}".format(secret_name))
+        logger.debug(f"Deleting: {secret_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = core_v1_api.delete_namespaced_secret(
@@ -147,7 +139,7 @@ class Secret(K8sResource):
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("delete_status: {}".format(delete_status.status))
+        logger.debug(f"delete_status: {delete_status.status}")
         if delete_status.status == "Success":
             logger.debug("Secret Deleted")
             return True

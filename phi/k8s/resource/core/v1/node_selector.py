@@ -33,14 +33,11 @@ class NodeSelectorRequirement(K8sObject):
     def get_k8s_object(
         self,
     ) -> V1NodeSelectorRequirement:
-        # Return a V1NodeSelectorRequirement object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_node_selector_requirement.py
-        _v1_node_selector_requirement = V1NodeSelectorRequirement(
+        return V1NodeSelectorRequirement(
             key=self.key,
             operator=self.operator,
             values=self.values,
         )
-        return _v1_node_selector_requirement
 
 
 class NodeSelectorTerm(K8sObject):
@@ -59,15 +56,16 @@ class NodeSelectorTerm(K8sObject):
     def get_k8s_object(
         self,
     ) -> V1NodeSelectorTerm:
-        # Return a V1NodeSelectorTerm object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_node_selector_term.py
-        _v1_node_selector_term = V1NodeSelectorTerm(
-            match_expressions=[me.get_k8s_object() for me in self.match_expressions]
+        return V1NodeSelectorTerm(
+            match_expressions=[
+                me.get_k8s_object() for me in self.match_expressions
+            ]
             if self.match_expressions
             else None,
-            match_fields=[mf.get_k8s_object() for mf in self.match_fields] if self.match_fields else None,
+            match_fields=[mf.get_k8s_object() for mf in self.match_fields]
+            if self.match_fields
+            else None,
         )
-        return _v1_node_selector_term
 
 
 class NodeSelector(K8sObject):
@@ -85,11 +83,10 @@ class NodeSelector(K8sObject):
     def get_k8s_object(
         self,
     ) -> V1NodeSelector:
-        # Return a V1NodeSelector object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_node_selector.py
-        _v1_node_selector = V1NodeSelector(
-            node_selector_terms=[nst.get_k8s_object() for nst in self.node_selector_terms]
+        return V1NodeSelector(
+            node_selector_terms=[
+                nst.get_k8s_object() for nst in self.node_selector_terms
+            ]
             if self.node_selector_terms
             else None,
         )
-        return _v1_node_selector

@@ -114,16 +114,12 @@ class IngressSpec(K8sObject):
     tls: Optional[List[V1IngressTLS]] = None
 
     def get_k8s_object(self) -> V1IngressSpec:
-        # Return a V1IngressSpec object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_ingress_spec.py
-
-        _v1_ingress_spec = V1IngressSpec(
+        return V1IngressSpec(
             default_backend=self.default_backend,
             ingress_class_name=self.ingress_class_name,
             rules=self.rules,
             tls=self.tls,
         )
-        return _v1_ingress_spec
 
 
 class Ingress(K8sResource):
@@ -143,15 +139,12 @@ class Ingress(K8sResource):
     def get_k8s_object(self) -> V1Ingress:
         """Creates a body for this Ingress"""
 
-        # Return a V1Ingress object to create a ClusterRole
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_ingress.py
-        _v1_ingress = V1Ingress(
+        return V1Ingress(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             spec=self.spec.get_k8s_object(),
         )
-        return _v1_ingress
 
     @staticmethod
     def get_from_cluster(
@@ -172,9 +165,7 @@ class Ingress(K8sResource):
             logger.debug("Getting ingress for all namespaces")
             ingress_list = networking_v1_api.list_ingress_for_all_namespaces()
 
-        ingress: Optional[List[V1Ingress]] = None
-        if ingress_list:
-            ingress = ingress_list.items
+        ingress = ingress_list.items if ingress_list else None
         logger.debug(f"ingress: {ingress}")
         logger.debug(f"ingress type: {type(ingress)}")
         return ingress
@@ -184,14 +175,14 @@ class Ingress(K8sResource):
         k8s_object: V1Ingress = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_ingress: V1Ingress = networking_v1_api.create_namespaced_ingress(
             namespace=namespace,
             body=k8s_object,
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("Created: {}".format(v1_ingress))
+        logger.debug(f"Created: {v1_ingress}")
         if v1_ingress.metadata.creation_timestamp is not None:
             logger.debug("Ingress Created")
             self.active_resource = v1_ingress
@@ -227,7 +218,7 @@ class Ingress(K8sResource):
         k8s_object: V1Ingress = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Updating: {}".format(ingress_name))
+        logger.debug(f"Updating: {ingress_name}")
         v1_ingress: V1Ingress = networking_v1_api.patch_namespaced_ingress(
             name=ingress_name,
             namespace=namespace,
@@ -248,7 +239,7 @@ class Ingress(K8sResource):
         ingress_name = self.get_resource_name()
         namespace = self.get_namespace()
 
-        logger.debug("Deleting: {}".format(ingress_name))
+        logger.debug(f"Deleting: {ingress_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = networking_v1_api.delete_namespaced_ingress(
@@ -257,7 +248,7 @@ class Ingress(K8sResource):
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("delete_status: {}".format(delete_status.status))
+        logger.debug(f"delete_status: {delete_status.status}")
         if delete_status.status == "Success":
             logger.debug("Ingress Deleted")
             return True

@@ -184,9 +184,9 @@ class SupersetBase(DockerApp):
             if python_path is None:
                 python_path = f"/app/pythonpath:{container_context.workspace_root}"
                 if self.mount_resources and self.resources_dir_container_path is not None:
-                    python_path = "{}:{}/pythonpath_dev".format(python_path, self.resources_dir_container_path)
+                    python_path = f"{python_path}:{self.resources_dir_container_path}/pythonpath_dev"
                 if self.add_python_paths is not None:
-                    python_path = "{}:{}".format(python_path, ":".join(self.add_python_paths))
+                    python_path = f'{python_path}:{":".join(self.add_python_paths)}'
             if python_path is not None:
                 container_env[PYTHONPATH_ENV_VAR] = python_path
 

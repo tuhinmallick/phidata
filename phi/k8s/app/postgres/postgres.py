@@ -80,16 +80,11 @@ class PostgresDb(K8sApp, DbApp):
         # Container Environment
         container_env: Dict[str, str] = self.container_env or {}
 
-        # Set postgres env vars
-        # Check: https://hub.docker.com/_/postgres
-        db_user = self.get_db_user()
-        if db_user:
+        if db_user := self.get_db_user():
             container_env["POSTGRES_USER"] = db_user
-        db_password = self.get_db_password()
-        if db_password:
+        if db_password := self.get_db_password():
             container_env["POSTGRES_PASSWORD"] = db_password
-        db_database = self.get_db_database()
-        if db_database:
+        if db_database := self.get_db_database():
             container_env["POSTGRES_DB"] = db_database
         if self.pgdata:
             container_env["PGDATA"] = self.pgdata

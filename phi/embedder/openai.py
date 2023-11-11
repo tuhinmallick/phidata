@@ -23,30 +23,28 @@ class OpenAIEmbedder(Embedder):
         return self.openai or OpenAI()
 
     def _response(self, text: str) -> CreateEmbeddingResponse:
-        if get_from_env("OPENAI_API_KEY") is None:
-            logger.debug("--o-o-- Using phi-proxy")
-            try:
-                from phi.api.llm import openai_embedding
-
-                response_json = openai_embedding(
-                    params={
-                        "input": text,
-                        "model": self.model,
-                        "encoding_format": self.encoding_format,
-                    }
-                )
-                if response_json is None:
-                    logger.error("Error: Could not reach Phidata Servers.")
-                    logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
-                    exit(1)
-                else:
-                    return CreateEmbeddingResponse.model_validate_json(response_json)
-            except Exception as e:
-                logger.exception(e)
-                logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
-                exit(1)
-        else:
+        if get_from_env("OPENAI_API_KEY") is not None:
             return self.client.embeddings.create(input=text, model=self.model, encoding_format=self.encoding_format)
+        logger.debug("--o-o-- Using phi-proxy")
+        try:
+            from phi.api.llm import openai_embedding
+
+            response_json = openai_embedding(
+                params={
+                    "input": text,
+                    "model": self.model,
+                    "encoding_format": self.encoding_format,
+                }
+            )
+            if response_json is not None:
+                return CreateEmbeddingResponse.model_validate_json(response_json)
+            logger.error("Error: Could not reach Phidata Servers.")
+            logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
+            exit(1)
+        except Exception as e:
+            logger.exception(e)
+            logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
+            exit(1)
 
     def get_embedding(self, text: str) -> List[float]:
         response: CreateEmbeddingResponse = self._response(text=text)

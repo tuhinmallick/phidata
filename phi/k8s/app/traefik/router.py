@@ -152,8 +152,7 @@ class TraefikRouter(K8sApp):
                 )
 
         if self.dashboard_enabled:
-            container_args.append("--api=true")
-            container_args.append("--api.dashboard=true")
+            container_args.extend(("--api=true", "--api.dashboard=true"))
             if self.insecure_api_access:
                 container_args.append("--api.insecure")
 

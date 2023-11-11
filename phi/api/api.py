@@ -69,6 +69,4 @@ api = Api()
 def invalid_response(r: Response) -> bool:
     """Returns true if the response is invalid"""
 
-    if r.status_code >= 400:
-        return True
-    return False
+    return r.status_code >= 400

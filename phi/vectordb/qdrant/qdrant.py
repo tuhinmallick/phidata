@@ -141,7 +141,7 @@ class Qdrant(VectorDb):
                 )
             )
             logger.debug(f"Inserted document: {document.name} ({document.meta_data})")
-        if len(points) > 0:
+        if points:
             self.client.upsert(collection_name=self.collection, wait=False, points=points)
         logger.debug(f"Upsert {len(points)} documents")
 
@@ -169,22 +169,18 @@ class Qdrant(VectorDb):
             limit=limit,
         )
 
-        # Build search results
-        search_results: List[Document] = []
-        for result in results:
-            if result.payload is None:
-                continue
-            search_results.append(
-                Document(
-                    name=result.payload["name"],
-                    meta_data=result.payload["meta_data"],
-                    content=result.payload["content"],
-                    embedder=self.embedder,
-                    embedding=result.vector,
-                    usage=result.payload["usage"],
-                )
+        search_results: List[Document] = [
+            Document(
+                name=result.payload["name"],
+                meta_data=result.payload["meta_data"],
+                content=result.payload["content"],
+                embedder=self.embedder,
+                embedding=result.vector,
+                usage=result.payload["usage"],
             )
-
+            for result in results
+            if result.payload is not None
+        ]
         return search_results
 
     def delete(self) -> None:

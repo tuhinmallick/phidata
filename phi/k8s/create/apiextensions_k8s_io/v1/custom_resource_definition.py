@@ -38,14 +38,15 @@ class CreateCustomResourceDefinition(CreateK8sResource):
         )
 
         crd_versions: List[CustomResourceDefinitionVersion] = []
-        if self.versions is not None and isinstance(self.versions, list):
-            for version in self.versions:
-                if isinstance(version, CustomResourceDefinitionVersion):
-                    crd_versions.append(version)
-        else:
+        if self.versions is None or not isinstance(self.versions, list):
             raise ValueError("CustomResourceDefinitionVersion invalid")
 
-        crd = CustomResourceDefinition(
+        crd_versions.extend(
+            version
+            for version in self.versions
+            if isinstance(version, CustomResourceDefinitionVersion)
+        )
+        return CustomResourceDefinition(
             name=crd_name,
             api_version=ApiVersion.APIEXTENSIONS_V1,
             kind=Kind.CUSTOMRESOURCEDEFINITION,
@@ -61,6 +62,3 @@ class CreateCustomResourceDefinition(CreateK8sResource):
                 versions=crd_versions,
             ),
         )
-
-        # logger.debug(f"CRD {crd_name} created")
-        return crd

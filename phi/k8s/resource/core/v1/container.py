@@ -65,7 +65,7 @@ class Probe(K8sObject):
     timeout_seconds: Optional[int] = Field(None, alias="timeoutSeconds")
 
     def get_k8s_object(self) -> V1Probe:
-        _v1_probe = V1Probe(
+        return V1Probe(
             failure_threshold=self.failure_threshold,
             http_get=self.http_get,
             initial_delay_seconds=self.initial_delay_seconds,
@@ -75,7 +75,6 @@ class Probe(K8sObject):
             termination_grace_period_seconds=self.termination_grace_period_seconds,
             timeout_seconds=self.timeout_seconds,
         )
-        return _v1_probe
 
 
 class ResourceFieldSelector(K8sObject):
@@ -92,14 +91,11 @@ class ResourceFieldSelector(K8sObject):
     resource: str
 
     def get_k8s_object(self) -> V1ResourceFieldSelector:
-        # Return a V1ResourceFieldSelector object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_resource_field_selector.py
-        _v1_resource_field_selector = V1ResourceFieldSelector(
+        return V1ResourceFieldSelector(
             container_name=self.container_name,
             divisor=self.divisor,
             resource=self.resource,
         )
-        return _v1_resource_field_selector
 
 
 class ObjectFieldSelector(K8sObject):
@@ -115,13 +111,10 @@ class ObjectFieldSelector(K8sObject):
     field_path: str = Field(..., alias="fieldPath")
 
     def get_k8s_object(self) -> V1ObjectFieldSelector:
-        # Return a V1ObjectFieldSelector object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_object_field_selector.py
-        _v1_object_field_selector = V1ObjectFieldSelector(
+        return V1ObjectFieldSelector(
             api_version=self.api_version,
             field_path=self.field_path,
         )
-        return _v1_object_field_selector
 
 
 class SecretKeySelector(K8sObject):
@@ -138,14 +131,11 @@ class SecretKeySelector(K8sObject):
     optional: Optional[bool] = None
 
     def get_k8s_object(self) -> V1SecretKeySelector:
-        # Return a V1SecretKeySelector object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_secret_key_selector.py
-        _v1_secret_key_selector = V1SecretKeySelector(
+        return V1SecretKeySelector(
             key=self.key,
             name=self.name,
             optional=self.optional,
         )
-        return _v1_secret_key_selector
 
 
 class ConfigMapKeySelector(K8sObject):
@@ -162,14 +152,11 @@ class ConfigMapKeySelector(K8sObject):
     optional: Optional[bool] = None
 
     def get_k8s_object(self) -> V1ConfigMapKeySelector:
-        # Return a V1ConfigMapKeySelector object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_config_map_key_selector.py
-        _v1_config_map_key_selector = V1ConfigMapKeySelector(
+        return V1ConfigMapKeySelector(
             key=self.key,
             name=self.name,
             optional=self.optional,
         )
-        return _v1_config_map_key_selector
 
 
 class EnvVarSource(K8sObject):
@@ -187,15 +174,18 @@ class EnvVarSource(K8sObject):
     secret_key_ref: Optional[SecretKeySelector] = Field(None, alias="secretKeyRef")
 
     def get_k8s_object(self) -> V1EnvVarSource:
-        # Return a V1EnvVarSource object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_env_var_source.py
-        _v1_env_var_source = V1EnvVarSource(
-            config_map_key_ref=self.config_map_key_ref.get_k8s_object() if self.config_map_key_ref else None,
+        return V1EnvVarSource(
+            config_map_key_ref=self.config_map_key_ref.get_k8s_object()
+            if self.config_map_key_ref
+            else None,
             field_ref=self.field_ref.get_k8s_object() if self.field_ref else None,
-            resource_field_ref=self.resource_field_ref.get_k8s_object() if self.resource_field_ref else None,
-            secret_key_ref=self.secret_key_ref.get_k8s_object() if self.secret_key_ref else None,
+            resource_field_ref=self.resource_field_ref.get_k8s_object()
+            if self.resource_field_ref
+            else None,
+            secret_key_ref=self.secret_key_ref.get_k8s_object()
+            if self.secret_key_ref
+            else None,
         )
-        return _v1_env_var_source
 
 
 class EnvVar(K8sObject):
@@ -212,14 +202,13 @@ class EnvVar(K8sObject):
     value_from: Optional[EnvVarSource] = Field(None, alias="valueFrom")
 
     def get_k8s_object(self) -> V1EnvVar:
-        # Return a V1EnvVar object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_env_var.py
-        _v1_env_var = V1EnvVar(
+        return V1EnvVar(
             name=self.name,
             value=self.value,
-            value_from=self.value_from.get_k8s_object() if self.value_from else None,
+            value_from=self.value_from.get_k8s_object()
+            if self.value_from
+            else None,
         )
-        return _v1_env_var
 
 
 class ConfigMapEnvSource(K8sObject):
@@ -236,11 +225,10 @@ class ConfigMapEnvSource(K8sObject):
     optional: Optional[bool] = None
 
     def get_k8s_object(self) -> V1ConfigMapEnvSource:
-        _v1_config_map_env_source = V1ConfigMapEnvSource(
+        return V1ConfigMapEnvSource(
             name=self.name,
             optional=self.optional,
         )
-        return _v1_config_map_env_source
 
 
 class SecretEnvSource(K8sObject):
@@ -257,11 +245,10 @@ class SecretEnvSource(K8sObject):
     optional: Optional[bool] = None
 
     def get_k8s_object(self) -> V1SecretEnvSource:
-        _v1_secret_env_source = V1SecretEnvSource(
+        return V1SecretEnvSource(
             name=self.name,
             optional=self.optional,
         )
-        return _v1_secret_env_source
 
 
 class EnvFromSource(K8sObject):
@@ -278,14 +265,15 @@ class EnvFromSource(K8sObject):
     secret_ref: Optional[SecretEnvSource] = Field(None, alias="secretRef")
 
     def get_k8s_object(self) -> V1EnvFromSource:
-        # Return a V1EnvFromSource object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_env_from_source.py
-        _v1_env_from_source = V1EnvFromSource(
-            config_map_ref=self.config_map_ref.get_k8s_object() if self.config_map_ref else None,
+        return V1EnvFromSource(
+            config_map_ref=self.config_map_ref.get_k8s_object()
+            if self.config_map_ref
+            else None,
             prefix=self.prefix,
-            secret_ref=self.secret_ref.get_k8s_object() if self.secret_ref else None,
+            secret_ref=self.secret_ref.get_k8s_object()
+            if self.secret_ref
+            else None,
         )
-        return _v1_env_from_source
 
 
 class ContainerPort(K8sObject):
@@ -316,14 +304,13 @@ class ContainerPort(K8sObject):
         return v.value if v else None
 
     def get_k8s_object(self) -> V1ContainerPort:
-        _v1_container_port = V1ContainerPort(
+        return V1ContainerPort(
             container_port=self.container_port,
             name=self.name,
             protocol=self.protocol.value if self.protocol else None,
             host_ip=self.host_ip,
             host_port=self.host_port,
         )
-        return _v1_container_port
 
 
 class VolumeMount(K8sObject):
@@ -353,7 +340,7 @@ class VolumeMount(K8sObject):
     sub_path_expr: Optional[str] = Field(None, alias="subPathExpr")
 
     def get_k8s_object(self) -> V1VolumeMount:
-        _v1_volume_mount = V1VolumeMount(
+        return V1VolumeMount(
             mount_path=self.mount_path,
             mount_propagation=self.mount_propagation,
             name=self.name,
@@ -361,7 +348,6 @@ class VolumeMount(K8sObject):
             sub_path=self.sub_path,
             sub_path_expr=self.sub_path_expr,
         )
-        return _v1_volume_mount
 
 
 class Container(K8sObject):
@@ -405,16 +391,8 @@ class Container(K8sObject):
         return v.value if v else None
 
     def get_k8s_object(self) -> V1Container:
-        # Return a V1Container object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_container.py
-        _ports: Optional[List[V1ContainerPort]] = None
-        if self.ports:
-            _ports = [_cp.get_k8s_object() for _cp in self.ports]
-
-        _env: Optional[List[V1EnvVar]] = None
-        if self.env:
-            _env = [_e.get_k8s_object() for _e in self.env]
-
+        _ports = [_cp.get_k8s_object() for _cp in self.ports] if self.ports else None
+        _env = [_e.get_k8s_object() for _e in self.env] if self.env else None
         _env_from: Optional[List[V1EnvFromSource]] = None
         if self.env_from:
             _env_from = [_ef.get_k8s_object() for _ef in self.env_from]
@@ -423,17 +401,20 @@ class Container(K8sObject):
         if self.volume_mounts:
             _volume_mounts = [_vm.get_k8s_object() for _vm in self.volume_mounts]
 
-        _v1_container = V1Container(
+        return V1Container(
             args=self.args,
             command=self.command,
             env=_env,
             env_from=_env_from,
             image=self.image,
-            image_pull_policy=self.image_pull_policy.value if self.image_pull_policy else None,
+            image_pull_policy=self.image_pull_policy.value
+            if self.image_pull_policy
+            else None,
             name=self.name,
             ports=_ports,
-            readiness_probe=self.readiness_probe.get_k8s_object() if self.readiness_probe else None,
+            readiness_probe=self.readiness_probe.get_k8s_object()
+            if self.readiness_probe
+            else None,
             resources=self.resources.get_k8s_object() if self.resources else None,
             volume_mounts=_volume_mounts,
         )
-        return _v1_container

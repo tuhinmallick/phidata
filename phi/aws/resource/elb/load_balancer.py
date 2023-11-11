@@ -188,7 +188,4 @@ class LoadBalancer(AwsResource):
 
     def get_arn(self, aws_client: AwsApiClient) -> Optional[str]:
         lb = self._read(aws_client)
-        if lb is None:
-            return None
-        lb_arn = lb.get("LoadBalancerArn", None)
-        return lb_arn
+        return None if lb is None else lb.get("LoadBalancerArn", None)

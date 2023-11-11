@@ -52,9 +52,11 @@ class PhiCliSettings(BaseSettings):
         if api_runtime == "dev":
             from os import getenv
 
-            if getenv("PHI_RUNTIME") == "docker":
-                return "http://host.docker.internal:7070"
-            return "http://localhost:7070"
+            return (
+                "http://host.docker.internal:7070"
+                if getenv("PHI_RUNTIME") == "docker"
+                else "http://localhost:7070"
+            )
         elif api_runtime == "stg":
             return "https://api.stgphi.com"
         else:

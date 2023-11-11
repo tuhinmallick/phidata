@@ -119,7 +119,7 @@ class PgConversationStorage(ConversationStorage):
     def get_all_conversation_ids(self, user_name: Optional[str] = None) -> List[str]:
         conversation_ids: List[str] = []
         try:
-            with self.Session() as sess, sess.begin():
+            with (self.Session() as sess, sess.begin()):
                 # get all conversation ids for this user
                 stmt = select(self.table)
                 if user_name is not None:
@@ -128,9 +128,11 @@ class PgConversationStorage(ConversationStorage):
                 stmt = stmt.order_by(self.table.c.created_at.desc())
                 # execute query
                 rows = sess.execute(stmt).fetchall()
-                for row in rows:
-                    if row is not None and row.id is not None:
-                        conversation_ids.append(row.id)
+                conversation_ids.extend(
+                    row.id
+                    for row in rows
+                    if row is not None and row.id is not None
+                )
         except Exception:
             logger.debug(f"Table does not exist: {self.table.name}")
         return conversation_ids
@@ -138,7 +140,7 @@ class PgConversationStorage(ConversationStorage):
     def get_all_conversations(self, user_name: Optional[str] = None) -> List[ConversationRow]:
         conversations: List[ConversationRow] = []
         try:
-            with self.Session() as sess, sess.begin():
+            with (self.Session() as sess, sess.begin()):
                 # get all conversation ids for this user
                 stmt = select(self.table)
                 if user_name is not None:
@@ -147,9 +149,11 @@ class PgConversationStorage(ConversationStorage):
                 stmt = stmt.order_by(self.table.c.created_at.desc())
                 # execute query
                 rows = sess.execute(stmt).fetchall()
-                for row in rows:
-                    if row.id is not None:
-                        conversations.append(ConversationRow.model_validate(row))
+                conversations.extend(
+                    ConversationRow.model_validate(row)
+                    for row in rows
+                    if row.id is not None
+                )
         except Exception:
             logger.debug(f"Table does not exist: {self.table.name}")
         return conversations

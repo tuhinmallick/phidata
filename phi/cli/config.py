@@ -188,12 +188,14 @@ class PhiCliConfig:
     ######################################################
 
     def get_ws_config_by_dir_name(self, ws_dir_name: str) -> Optional[WorkspaceConfig]:
-        ws_root_str: Optional[str] = None
-        for k, v in self.ws_config_map.items():
-            if v.ws_root_path.stem == ws_dir_name:
-                ws_root_str = k
-                break
-
+        ws_root_str: Optional[str] = next(
+            (
+                k
+                for k, v in self.ws_config_map.items()
+                if v.ws_root_path.stem == ws_dir_name
+            ),
+            None,
+        )
         if ws_root_str is None or ws_root_str not in self.ws_config_map:
             return None
 
@@ -261,9 +263,7 @@ class PhiCliConfig:
 
         if show_all and len(self.ws_config_map) > 0:
             print_heading("Available workspaces:\n")
-            c = 1
-            for k, v in self.ws_config_map.items():
+            for c, (k, v) in enumerate(self.ws_config_map.items(), start=1):
                 print_info(f"  {c}. {k}")
                 if v.ws_schema and v.ws_schema.ws_name:
                     print_info(f"     Name: {v.ws_schema.ws_name}")
-                c += 1

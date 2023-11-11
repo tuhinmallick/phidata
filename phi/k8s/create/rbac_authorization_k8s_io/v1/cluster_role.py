@@ -34,7 +34,7 @@ class CreateClusterRole(CreateK8sResource):
             self.rules if self.rules else [PolicyRule(api_groups=["*"], resources=["*"], verbs=["*"])]
         )
 
-        cr = ClusterRole(
+        return ClusterRole(
             name=cr_name,
             api_version=ApiVersion.RBAC_AUTH_V1,
             kind=Kind.CLUSTERROLE,
@@ -45,4 +45,3 @@ class CreateClusterRole(CreateK8sResource):
             ),
             rules=cr_rules,
         )
-        return cr

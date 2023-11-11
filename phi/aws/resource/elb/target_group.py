@@ -214,7 +214,4 @@ class TargetGroup(AwsResource):
 
     def get_arn(self, aws_client: AwsApiClient) -> Optional[str]:
         tg = self._read(aws_client)
-        if tg is None:
-            return None
-        tg_arn = tg.get("TargetGroupArn", None)
-        return tg_arn
+        return None if tg is None else tg.get("TargetGroupArn", None)

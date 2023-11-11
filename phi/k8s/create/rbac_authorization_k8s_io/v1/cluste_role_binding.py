@@ -36,7 +36,7 @@ class CreateClusterRoleBinding(CreateK8sResource):
             app_name=self.app_name,
             labels=self.labels,
         )
-        crb = ClusterRoleBinding(
+        return ClusterRoleBinding(
             name=crb_name,
             api_version=ApiVersion.RBAC_AUTH_V1,
             kind=Kind.CLUSTERROLEBINDING,
@@ -51,4 +51,3 @@ class CreateClusterRoleBinding(CreateK8sResource):
             ),
             subjects=subjects,
         )
-        return crb

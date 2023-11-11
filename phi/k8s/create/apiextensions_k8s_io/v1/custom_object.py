@@ -50,7 +50,7 @@ class CreateCustomObject(CreateK8sResource):
             raise ValueError(f"CustomResourceDefinition plural invalid: {plural}")
 
         # validate api_group_str and api_version_str
-        api_group_version_str = "{}/{}".format(api_group_str, api_version_str)
+        api_group_version_str = f"{api_group_str}/{api_version_str}"
         api_version_enum = None
         try:
             api_version_enum = ApiVersion.from_str(api_group_version_str)
@@ -64,7 +64,7 @@ class CreateCustomObject(CreateK8sResource):
         except NotImplementedError:
             raise NotImplementedError(f"{kind_str} is not a supported Kind")
 
-        custom_object = CustomObject(
+        return CustomObject(
             name=custom_object_name,
             api_version=api_version_enum,
             kind=kind_enum,
@@ -78,8 +78,3 @@ class CreateCustomObject(CreateK8sResource):
             plural=plural,
             spec=self.spec,
         )
-
-        # logger.debug(
-        #     f"CustomObject {custom_object_name}:\n{custom_object.json(exclude_defaults=True, indent=2)}"
-        # )
-        return custom_object

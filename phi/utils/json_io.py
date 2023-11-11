@@ -8,7 +8,7 @@ from phi.utils.log import logger
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, datetime) or isinstance(o, date):
+        if isinstance(o, (datetime, date)):
             return o.isoformat()
 
         return json.JSONEncoder.default(self, o)
