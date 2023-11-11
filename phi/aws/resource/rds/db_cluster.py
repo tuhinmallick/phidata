@@ -355,7 +355,7 @@ class DbCluster(AwsResource):
                 sg_id = sg.get_security_group_id(aws_client)
                 if sg_id is not None:
                     sg_ids.append(sg_id)
-            if len(sg_ids) > 0:
+            if sg_ids:
                 if vpc_security_group_ids is None:
                     vpc_security_group_ids = []
                 vpc_security_group_ids.extend(sg_ids)
@@ -371,15 +371,12 @@ class DbCluster(AwsResource):
         if db_subnet_group_name is not None:
             not_null_args["DBSubnetGroupName"] = db_subnet_group_name
 
-        database_name = self.get_database_name()
-        if database_name:
+        if database_name := self.get_database_name():
             not_null_args["DatabaseName"] = database_name
 
-        master_username = self.get_master_username()
-        if master_username:
+        if master_username := self.get_master_username():
             not_null_args["MasterUsername"] = master_username
-        master_user_password = self.get_master_user_password()
-        if master_user_password:
+        if master_user_password := self.get_master_user_password():
             not_null_args["MasterUserPassword"] = master_user_password
 
         if self.availability_zones:
@@ -641,21 +638,21 @@ class DbCluster(AwsResource):
                 sg_id = sg.get_security_group_id(aws_client)
                 if sg_id is not None:
                     sg_ids.append(sg_id)
-            if len(sg_ids) > 0:
+            if sg_ids:
                 if vpc_security_group_ids is None:
                     vpc_security_group_ids = []
                 vpc_security_group_ids.extend(sg_ids)
         # Check if vpc_security_group_ids has changed
         existing_vpc_security_group = db_cluster.get("VpcSecurityGroups", [])
-        existing_vpc_security_group_ids = []
-        for existing_sg in existing_vpc_security_group:
-            existing_vpc_security_group_ids.append(existing_sg.get("VpcSecurityGroupId", None))
+        existing_vpc_security_group_ids = [
+            existing_sg.get("VpcSecurityGroupId", None)
+            for existing_sg in existing_vpc_security_group
+        ]
         if vpc_security_group_ids is not None and vpc_security_group_ids != existing_vpc_security_group_ids:
             logger.info(f"Updating SecurityGroups: {vpc_security_group_ids}")
             not_null_args["VpcSecurityGroupIds"] = vpc_security_group_ids
 
-        master_user_password = self.get_master_user_password()
-        if master_user_password:
+        if master_user_password := self.get_master_user_password():
             not_null_args["MasterUserPassword"] = master_user_password
 
         if self.new_db_cluster_identifier:
@@ -805,9 +802,7 @@ class DbCluster(AwsResource):
             The DbCluster port
         """
         logger.debug(f"Getting port for {self.get_resource_name()}")
-        _db_port: Optional[str] = None
-        if self.active_resource:
-            _db_port = self.active_resource.get("Port")
+        _db_port = self.active_resource.get("Port") if self.active_resource else None
         if _db_port is None:
             client: AwsApiClient = aws_client or self.get_aws_client()
             resource = self._read(aws_client=client)

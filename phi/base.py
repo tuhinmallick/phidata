@@ -105,9 +105,7 @@ class PhiBase(BaseModel):
 
     def get_secret_from_file(self, secret_name: str) -> Optional[str]:
         secret_file_data = self.get_secret_file_data()
-        if secret_file_data is not None:
-            return secret_file_data.get(secret_name)
-        return None
+        return None if secret_file_data is None else secret_file_data.get(secret_name)
 
     def set_aws_env_vars(self, env_dict: Dict[str, str], aws_region: Optional[str] = None) -> None:
         from phi.constants import (

@@ -74,10 +74,8 @@ class K8sResource(ResourceBase, K8sObject):
         return DEFAULT_K8S_NAMESPACE
 
     def get_label_selector(self) -> str:
-        labels = self.metadata.labels
-        if labels:
-            label_str = ",".join([f"{k}={v}" for k, v in labels.items()])
-            return label_str
+        if labels := self.metadata.labels:
+            return ",".join([f"{k}={v}" for k, v in labels.items()])
         return ""
 
     @staticmethod
@@ -118,7 +116,7 @@ class K8sResource(ResourceBase, K8sObject):
     def is_active(self, k8s_client: K8sApiClient) -> bool:
         """Returns True if the resource is active on the k8s cluster"""
         self.active_resource = self._read(k8s_client=k8s_client)
-        return True if self.active_resource is not None else False
+        return self.active_resource is not None
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         logger.error(f"@_create method not defined for {self.get_resource_name()}")

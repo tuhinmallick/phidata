@@ -221,9 +221,9 @@ class AirflowBase(DockerApp):
             if python_path is None:
                 python_path = f"{container_context.workspace_root}:{self.get_airflow_home()}"
                 if self.mount_resources and self.resources_dir_container_path is not None:
-                    python_path = "{}:{}".format(python_path, self.resources_dir_container_path)
+                    python_path = f"{python_path}:{self.resources_dir_container_path}"
                 if self.add_python_paths is not None:
-                    python_path = "{}:{}".format(python_path, ":".join(self.add_python_paths))
+                    python_path = f'{python_path}:{":".join(self.add_python_paths)}'
             if python_path is not None:
                 container_env[PYTHONPATH_ENV_VAR] = python_path
 
@@ -245,7 +245,7 @@ class AirflowBase(DockerApp):
         if self.db_connections is not None:
             for conn_id, conn_url in self.db_connections.items():
                 try:
-                    af_conn_id = str("AIRFLOW_CONN_{}".format(conn_id)).upper()
+                    af_conn_id = f"AIRFLOW_CONN_{conn_id}".upper()
                     container_env[af_conn_id] = conn_url
                 except Exception as e:
                     logger.exception(e)

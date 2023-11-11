@@ -153,7 +153,7 @@ class CacheCluster(AwsResource):
                 sg_id = sg.get_security_group_id(aws_client)
                 if sg_id is not None:
                     sg_ids.append(sg_id)
-            if len(sg_ids) > 0:
+            if sg_ids:
                 cache_security_group_ids = sg_ids
                 logger.debug(f"Using SecurityGroups: {cache_security_group_ids}")
         if cache_security_group_ids is not None:
@@ -421,8 +421,10 @@ class CacheCluster(AwsResource):
                 for resource in resource_list:
                     _cluster_identifier = resource.get("CacheClusterId", None)
                     if _cluster_identifier == cache_cluster_id:
-                        for node in resource.get("CacheNodes", []):
-                            cache_endpoint.append(node.get("Endpoint", {}).get("Address", None))
+                        cache_endpoint.extend(
+                            node.get("Endpoint", {}).get("Address", None)
+                            for node in resource.get("CacheNodes", [])
+                        )
                         break
         except Exception as e:
             logger.error(f"Error reading {self.get_resource_type()}.")
@@ -449,8 +451,10 @@ class CacheCluster(AwsResource):
                 for resource in resource_list:
                     _cluster_identifier = resource.get("CacheClusterId", None)
                     if _cluster_identifier == cache_cluster_id:
-                        for node in resource.get("CacheNodes", []):
-                            cache_port.append(node.get("Endpoint", {}).get("Port", None))
+                        cache_port.extend(
+                            node.get("Endpoint", {}).get("Port", None)
+                            for node in resource.get("CacheNodes", [])
+                        )
                         break
         except Exception as e:
             logger.error(f"Error reading {self.get_resource_type()}.")

@@ -156,8 +156,7 @@ class GlueCrawler(AwsResource):
             if self.tags:
                 not_null_args["Tags"] = self.tags
 
-            targets = self.get_glue_crawler_targets()
-            if targets:
+            if targets := self.get_glue_crawler_targets():
                 not_null_args["Targets"] = targets
 
             # Create crawler

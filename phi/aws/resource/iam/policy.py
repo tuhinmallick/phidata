@@ -106,12 +106,14 @@ class IamPolicy(AwsResource):
         logger.debug(f"Reading {self.get_resource_type()}: {self.get_resource_name()}")
         try:
             service_resource = self.get_service_resource(aws_client)
-            policy = None
-            for _policy in service_resource.policies.all():
-                if _policy.policy_name == self.name:
-                    policy = _policy
-                    break
-
+            policy = next(
+                (
+                    _policy
+                    for _policy in service_resource.policies.all()
+                    if _policy.policy_name == self.name
+                ),
+                None,
+            )
             if policy is None:
                 logger.debug("No Policy found")
                 return None

@@ -34,12 +34,7 @@ class Pod(K8sResource):
             # logger.debug("Getting SA for all namespaces")
             pod_list = core_v1_api.list_pod_for_all_namespaces()
 
-        pods: Optional[List[V1Pod]] = None
-        if pod_list:
-            pods = pod_list.items
-        # logger.debug(f"pods: {pods}")
-        # logger.debug(f"pods type: {type(pods)}")
-        return pods
+        return pod_list.items if pod_list else None
 
     def _read(self, k8s_client: K8sApiClient) -> Optional[V1Pod]:
         """Returns the "Active" Deployment from the cluster"""
@@ -54,7 +49,7 @@ class Pod(K8sResource):
             return None
 
         resource_name = self.get_resource_name()
-        logger.debug("resource_name: {}".format(resource_name))
+        logger.debug(f"resource_name: {resource_name}")
         for resource in active_resources:
             logger.debug(f"Checking {resource.metadata.name}")
             pod_name = ""

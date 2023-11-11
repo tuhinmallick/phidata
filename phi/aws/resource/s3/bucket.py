@@ -187,14 +187,12 @@ class S3Bucket(AwsResource):
         logger.debug(f"Getting objects for bucket: {bucket.name}")
         # Get all objects in bucket
         object_summaries = bucket.objects.all()
-        all_objects: List[S3Object] = []
-        for object_summary in object_summaries:
-            if prefix is not None and not object_summary.key.startswith(prefix):
-                continue
-            all_objects.append(
-                S3Object(
-                    bucket_name=bucket.name,
-                    name=object_summary.key,
-                )
+        all_objects: List[S3Object] = [
+            S3Object(
+                bucket_name=bucket.name,
+                name=object_summary.key,
             )
+            for object_summary in object_summaries
+            if prefix is None or object_summary.key.startswith(prefix)
+        ]
         return all_objects

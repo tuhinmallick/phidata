@@ -251,20 +251,20 @@ class Conversation(BaseModel):
         if row.meta_data is not None:
             # If meta_data is set in the conversation,
             # merge it with the database meta_data. The conversation meta_data takes precedence
-            if self.meta_data is not None and row.meta_data is not None:
+            if self.meta_data is not None:
                 self.meta_data = {**row.meta_data, **self.meta_data}
             # If meta_data is not set in the conversation, use the database meta_data
-            if self.meta_data is None and row.meta_data is not None:
+            if self.meta_data is None:
                 self.meta_data = row.meta_data
 
         # Update extra_data from the database
         if row.extra_data is not None:
             # If extra_data is set in the conversation,
             # merge it with the database extra_data. The conversation extra_data takes precedence
-            if self.extra_data is not None and row.extra_data is not None:
+            if self.extra_data is not None:
                 self.extra_data = {**row.extra_data, **self.extra_data}
             # If extra_data is not set in the conversation, use the database extra_data
-            if self.extra_data is None and row.extra_data is not None:
+            if self.extra_data is None:
                 self.extra_data = row.extra_data
 
         # Update the timestamp of when this conversation was created in the database
@@ -374,9 +374,7 @@ class Conversation(BaseModel):
         - Don't use phrases like 'based on the information provided' or 'from the knowledge base'.
         """
 
-        # Return the system prompt after removing newlines and indenting
-        _system_prompt = cast(str, remove_indent(_system_prompt))
-        return _system_prompt
+        return cast(str, remove_indent(_system_prompt))
 
     def get_references_from_knowledge_base(self, query: str, num_documents: Optional[int] = None) -> Optional[str]:
         """Return a list of references from the knowledge base"""
@@ -400,9 +398,7 @@ class Conversation(BaseModel):
             return remove_indent(self.chat_history_function(**chat_history_kwargs))
 
         formatted_history = self.memory.get_formatted_chat_history(num_messages=self.num_history_messages)
-        if formatted_history == "":
-            return None
-        return remove_indent(formatted_history)
+        return None if formatted_history == "" else remove_indent(formatted_history)
 
     def get_user_prompt(
         self, message: Union[List[Dict], str], references: Optional[str] = None, chat_history: Optional[str] = None
@@ -464,9 +460,7 @@ class Conversation(BaseModel):
         _user_prompt += f"\nUSER: {message}"
         _user_prompt += "\nASSISTANT: "
 
-        # Return the user prompt after removing newlines and indenting
-        _user_prompt = cast(str, remove_indent(_user_prompt))
-        return _user_prompt
+        return cast(str, remove_indent(_user_prompt))
 
     def get_text_from_message(self, message: Union[List[Dict], str]) -> str:
         """Return the user texts from the message"""
@@ -485,7 +479,7 @@ class Conversation(BaseModel):
                         #     text_messages.append(f"Image: {m_value}")
                         # else:
                         #     text_messages.append(f"{m_type}: {m_value}")
-            if len(text_messages) > 0:
+            if text_messages:
                 return "\n".join(text_messages)
         return ""
 
@@ -659,10 +653,7 @@ class Conversation(BaseModel):
             resp = self._chat_tasks(message=message, stream=stream)
         else:
             resp = self._chat(message=message, stream=stream)
-        if stream:
-            return resp
-        else:
-            return next(resp)
+        return resp if stream else next(resp)
 
     def run(self, message: Union[List[Dict], str], stream: bool = True) -> Union[Iterator[str], str]:
         return self.chat(message=message, stream=stream)
@@ -684,8 +675,7 @@ class Conversation(BaseModel):
         # -*- Generate response
         batch_llm_response_message = {}
         if stream:
-            for response_delta in self.llm.response_delta(messages=messages):
-                yield response_delta
+            yield from self.llm.response_delta(messages=messages)
         else:
             batch_llm_response_message = self.llm.response_message(messages=messages)
 
@@ -720,10 +710,7 @@ class Conversation(BaseModel):
         if self.tasks and len(self.tasks) > 0:
             raise Exception("chat_raw does not support tasks")
         resp = self._chat_raw(messages=messages, user_message=user_message, stream=stream)
-        if stream:
-            return resp
-        else:
-            return next(resp)
+        return resp if stream else next(resp)
 
     def rename(self, name: str) -> None:
         """Rename the conversation"""

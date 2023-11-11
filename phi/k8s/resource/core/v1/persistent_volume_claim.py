@@ -40,14 +40,11 @@ class PersistentVolumeClaimSpec(K8sObject):
     def get_k8s_object(
         self,
     ) -> V1PersistentVolumeClaimSpec:
-        # Return a V1PersistentVolumeClaimSpec object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_persistent_volume_claim_spec.py
-        _v1_persistent_volume_claim_spec = V1PersistentVolumeClaimSpec(
+        return V1PersistentVolumeClaimSpec(
             access_modes=[access_mode.value for access_mode in self.access_modes],
             resources=self.resources.get_k8s_object(),
             storage_class_name=self.storage_class_name,
         )
-        return _v1_persistent_volume_claim_spec
 
 
 class PersistentVolumeClaim(K8sResource):
@@ -75,15 +72,12 @@ class PersistentVolumeClaim(K8sResource):
     def get_k8s_object(self) -> V1PersistentVolumeClaim:
         """Creates a body for this PVC"""
 
-        # Return a V1PersistentVolumeClaim object to create a ClusterRole
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_persistent_volume_claim.py
-        _v1_persistent_volume_claim = V1PersistentVolumeClaim(
+        return V1PersistentVolumeClaim(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             spec=self.spec.get_k8s_object(),
         )
-        return _v1_persistent_volume_claim
 
     @staticmethod
     def get_from_cluster(
@@ -104,9 +98,7 @@ class PersistentVolumeClaim(K8sResource):
             logger.debug("Getting PVCs for all namespaces")
             pvc_list = core_v1_api.list_persistent_volume_claim_for_all_namespaces(**kwargs)
 
-        pvcs: Optional[List[V1PersistentVolumeClaim]] = None
-        if pvc_list:
-            pvcs = pvc_list.items
+        pvcs = pvc_list.items if pvc_list else None
         logger.debug(f"pvcs: {pvcs}")
         logger.debug(f"pvcs type: {type(pvcs)}")
         return pvcs
@@ -116,7 +108,7 @@ class PersistentVolumeClaim(K8sResource):
         k8s_object: V1PersistentVolumeClaim = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_persistent_volume_claim: V1PersistentVolumeClaim = core_v1_api.create_namespaced_persistent_volume_claim(
             namespace=namespace, body=k8s_object
         )
@@ -156,7 +148,7 @@ class PersistentVolumeClaim(K8sResource):
         k8s_object: V1PersistentVolumeClaim = self.get_k8s_object()
         namespace = self.get_namespace()
 
-        logger.debug("Updating: {}".format(pvc_name))
+        logger.debug(f"Updating: {pvc_name}")
         v1_persistent_volume_claim: V1PersistentVolumeClaim = core_v1_api.patch_namespaced_persistent_volume_claim(
             name=pvc_name, namespace=namespace, body=k8s_object
         )
@@ -173,7 +165,7 @@ class PersistentVolumeClaim(K8sResource):
         pvc_name = self.get_resource_name()
         namespace = self.get_namespace()
 
-        logger.debug("Deleting: {}".format(pvc_name))
+        logger.debug(f"Deleting: {pvc_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         _delete_status: V1Status = core_v1_api.delete_namespaced_persistent_volume_claim(

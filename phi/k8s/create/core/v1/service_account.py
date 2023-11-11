@@ -34,11 +34,10 @@ class CreateServiceAccount(CreateK8sResource):
 
         sa_image_pull_secrets: Optional[List[LocalObjectReference]] = None
         if self.image_pull_secrets is not None and isinstance(self.image_pull_secrets, list):
-            sa_image_pull_secrets = []
-            for _ips in self.image_pull_secrets:
-                sa_image_pull_secrets.append(LocalObjectReference(name=_ips))
-
-        sa = ServiceAccount(
+            sa_image_pull_secrets = [
+                LocalObjectReference(name=_ips) for _ips in self.image_pull_secrets
+            ]
+        return ServiceAccount(
             name=sa_name,
             api_version=ApiVersion.CORE_V1,
             kind=Kind.SERVICEACCOUNT,
@@ -51,4 +50,3 @@ class CreateServiceAccount(CreateK8sResource):
             image_pull_secrets=sa_image_pull_secrets,
             secrets=self.secrets,
         )
-        return sa

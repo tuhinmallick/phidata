@@ -148,8 +148,7 @@ class CloudFormationStack(AwsResource):
         # logger.debug(f"Getting StackResource {logical_id} for {self.name}")
         try:
             service_resource = self.get_service_resource(aws_client)
-            stack_resource = service_resource.StackResource(self.name, logical_id)
-            return stack_resource
+            return service_resource.StackResource(self.name, logical_id)
         except Exception as e:
             logger.error(e)
         return None
@@ -188,7 +187,7 @@ class CloudFormationStack(AwsResource):
             if private_subnet_3_physical_resource_id is not None:
                 private_subnets.append(private_subnet_3_physical_resource_id)
 
-            return private_subnets if (len(private_subnets) > 0) else None
+            return private_subnets if private_subnets else None
         except Exception as e:
             logger.error(e)
         return None
@@ -213,7 +212,7 @@ class CloudFormationStack(AwsResource):
             if public_subnet_2_physical_resource_id is not None:
                 public_subnets.append(public_subnet_2_physical_resource_id)
 
-            return public_subnets if (len(public_subnets) > 0) else None
+            return public_subnets if public_subnets else None
         except Exception as e:
             logger.error(e)
         return None

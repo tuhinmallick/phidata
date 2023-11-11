@@ -22,9 +22,6 @@ class LabelSelector(K8sObject):
     match_labels: Optional[Dict[str, str]] = Field(None, alias="matchLabels")
 
     def get_k8s_object(self) -> V1LabelSelector:
-        # Return a V1LabelSelector object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_label_selector.py
-        _v1_label_selector = V1LabelSelector(
+        return V1LabelSelector(
             match_labels=self.match_labels,
         )
-        return _v1_label_selector

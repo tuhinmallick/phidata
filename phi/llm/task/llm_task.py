@@ -173,9 +173,7 @@ class LLMTask(BaseModel):
         if self.function_calls:
             _system_prompt += "You have access to functions that you can run to help you respond to the user.\n"
 
-        # Return the system prompt after removing newlines and indenting
-        _system_prompt = cast(str, remove_indent(_system_prompt))
-        return _system_prompt
+        return cast(str, remove_indent(_system_prompt))
 
     def get_references_from_knowledge_base(self, query: str, num_documents: Optional[int] = None) -> Optional[str]:
         """Return a list of references from the knowledge base"""
@@ -246,9 +244,7 @@ class LLMTask(BaseModel):
         _user_prompt += f"\nUSER: {message}"
         _user_prompt += "\nASSISTANT: "
 
-        # Return the user prompt after removing newlines and indenting
-        _user_prompt = cast(str, remove_indent(_user_prompt))
-        return _user_prompt
+        return cast(str, remove_indent(_user_prompt))
 
     def get_text_from_message(self, message: Union[List[Dict], str]) -> str:
         """Return the user texts from the message"""
@@ -267,7 +263,7 @@ class LLMTask(BaseModel):
                         #     text_messages.append(f"Image: {m_value}")
                         # else:
                         #     text_messages.append(f"{m_type}: {m_value}")
-            if len(text_messages) > 0:
+            if text_messages:
                 return "\n".join(text_messages)
         return ""
 
@@ -350,13 +346,10 @@ class LLMTask(BaseModel):
 
     def run(self, message: Optional[Union[List[Dict], str]] = None, stream: bool = True) -> Union[Iterator[str], str]:
         resp = self._run(message=message, stream=stream)
-        if stream:
-            return resp
-        else:
-            return next(resp)
+        return resp if stream else next(resp)
 
     def to_dict(self) -> Dict[str, Any]:
-        _dict = {
+        return {
             "id": self.id,
             "name": self.name,
             "meta_data": self.meta_data,
@@ -367,7 +360,6 @@ class LLMTask(BaseModel):
             "llm": self.llm.to_dict() if self.llm else None,
             "metrics": self.llm.metrics if self.llm else None,
         }
-        return _dict
 
     ###########################################################################
     # LLM functions

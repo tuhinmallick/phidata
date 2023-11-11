@@ -10,9 +10,7 @@ def get_workspace_dir_from_env() -> Optional[Path]:
 
     logger.debug(f"Reading {WORKSPACE_DIR_ENV_VAR} from environment variables")
     workspace_dir = getenv(WORKSPACE_DIR_ENV_VAR, None)
-    if workspace_dir is not None:
-        return Path(workspace_dir)
-    return None
+    return Path(workspace_dir) if workspace_dir is not None else None
 
 
 def get_workspace_dir_path(ws_root_path: Path) -> Path:

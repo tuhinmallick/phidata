@@ -109,7 +109,7 @@ class DockerApp(AppBase):
         if workspace_root_in_container is None:
             raise Exception("Could not determine workspace_root in container")
 
-        workspace_parent_paths = workspace_root_in_container.split("/")[0:-1]
+        workspace_parent_paths = workspace_root_in_container.split("/")[:-1]
         workspace_parent_in_container = "/".join(workspace_parent_paths)
 
         self.container_context = ContainerContext(
@@ -118,24 +118,25 @@ class DockerApp(AppBase):
             workspace_parent=workspace_parent_in_container,
         )
 
-        if self.workspace_settings is not None and self.workspace_settings.scripts_dir is not None:
-            self.container_context.scripts_dir = f"{workspace_root_in_container}/{self.workspace_settings.scripts_dir}"
+        if self.workspace_settings is not None:
+            if self.workspace_settings.scripts_dir is not None:
+                self.container_context.scripts_dir = f"{workspace_root_in_container}/{self.workspace_settings.scripts_dir}"
 
-        if self.workspace_settings is not None and self.workspace_settings.storage_dir is not None:
-            self.container_context.storage_dir = f"{workspace_root_in_container}/{self.workspace_settings.storage_dir}"
+            if self.workspace_settings.storage_dir is not None:
+                self.container_context.storage_dir = f"{workspace_root_in_container}/{self.workspace_settings.storage_dir}"
 
-        if self.workspace_settings is not None and self.workspace_settings.workflows_dir is not None:
-            self.container_context.workflows_dir = (
-                f"{workspace_root_in_container}/{self.workspace_settings.workflows_dir}"
-            )
+            if self.workspace_settings.workflows_dir is not None:
+                self.container_context.workflows_dir = (
+                    f"{workspace_root_in_container}/{self.workspace_settings.workflows_dir}"
+                )
 
-        if self.workspace_settings is not None and self.workspace_settings.workspace_dir is not None:
-            self.container_context.workspace_dir = (
-                f"{workspace_root_in_container}/{self.workspace_settings.workspace_dir}"
-            )
+            if self.workspace_settings.workspace_dir is not None:
+                self.container_context.workspace_dir = (
+                    f"{workspace_root_in_container}/{self.workspace_settings.workspace_dir}"
+                )
 
-        if self.workspace_settings is not None and self.workspace_settings.ws_schema is not None:
-            self.container_context.workspace_schema = self.workspace_settings.ws_schema
+            if self.workspace_settings.ws_schema is not None:
+                self.container_context.workspace_schema = self.workspace_settings.ws_schema
 
         if self.requirements_file is not None:
             self.container_context.requirements_file = f"{workspace_root_in_container}/{self.requirements_file}"
@@ -189,9 +190,9 @@ class DockerApp(AppBase):
             if python_path is None:
                 python_path = container_context.workspace_root
                 if self.mount_resources and self.resources_dir_container_path is not None:
-                    python_path = "{}:{}".format(python_path, self.resources_dir_container_path)
+                    python_path = f"{python_path}:{self.resources_dir_container_path}"
                 if self.add_python_paths is not None:
-                    python_path = "{}:{}".format(python_path, ":".join(self.add_python_paths))
+                    python_path = f'{python_path}:{":".join(self.add_python_paths)}'
             if python_path is not None:
                 container_env[PYTHONPATH_ENV_VAR] = python_path
 
@@ -315,7 +316,7 @@ class DockerApp(AppBase):
         # -*- Get Container Command
         container_cmd: Optional[List[str]] = self.get_container_command()
         if container_cmd:
-            logger.debug("Command: {}".format(" ".join(container_cmd)))
+            logger.debug(f'Command: {" ".join(container_cmd)}')
 
         # -*- Build the DockerContainer for this App
         docker_container = DockerContainer(
@@ -324,7 +325,9 @@ class DockerApp(AppBase):
             entrypoint=self.entrypoint,
             command=" ".join(container_cmd) if container_cmd is not None else None,
             detach=self.container_detach,
-            auto_remove=self.container_auto_remove if not self.debug_mode else False,
+            auto_remove=self.container_auto_remove
+            if not self.debug_mode
+            else False,
             remove=self.container_remove if not self.debug_mode else False,
             healthcheck=self.container_healthcheck,
             hostname=self.container_hostname,
@@ -332,7 +335,7 @@ class DockerApp(AppBase):
             environment=container_env,
             network=build_context.network,
             platform=self.container_platform,
-            ports=container_ports if len(container_ports) > 0 else None,
+            ports=container_ports if container_ports else None,
             restart_policy=self.container_restart_policy,
             stdin_open=self.container_stdin_open,
             stderr=self.container_stderr,

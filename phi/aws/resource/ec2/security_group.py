@@ -420,22 +420,25 @@ class SecurityGroup(AwsResource):
                     source_sg_id: Optional[str] = None
                     # If security_group_id is specified, use that
                     # Otherwise, use the current security group id
-                    if rule.security_group_id is not None:
-                        if isinstance(rule.security_group_id, str):
-                            source_sg_id = rule.security_group_id
-                        elif isinstance(rule.security_group_id, AwsReference):
-                            source_sg_id = rule.security_group_id.get_reference(aws_client=aws_client)
-                    else:
+                    if rule.security_group_id is None:
                         source_sg_id = group_id
 
+                    elif isinstance(rule.security_group_id, str):
+                        source_sg_id = rule.security_group_id
+                    elif isinstance(rule.security_group_id, AwsReference):
+                        source_sg_id = rule.security_group_id.get_reference(aws_client=aws_client)
                     # Either security_group_id or security_group_name must be specified
                     # for the rule to be valid
-                    if source_sg_id is not None or rule.security_group_name is not None:
-                        user_id_group_pair = {}
-                        if source_sg_id is not None:
-                            user_id_group_pair["GroupId"] = source_sg_id
+                    if source_sg_id is not None:
+                        user_id_group_pair = {"GroupId": source_sg_id}
                         if rule.security_group_name is not None:
                             user_id_group_pair["GroupName"] = rule.security_group_name
+                        if rule.description is not None:
+                            user_id_group_pair["Description"] = rule.description
+                        ip_permission["UserIdGroupPairs"] = [user_id_group_pair]
+
+                    elif rule.security_group_name is not None:
+                        user_id_group_pair = {"GroupName": rule.security_group_name}
                         if rule.description is not None:
                             user_id_group_pair["Description"] = rule.description
                         ip_permission["UserIdGroupPairs"] = [user_id_group_pair]

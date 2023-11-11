@@ -68,10 +68,10 @@ def create_workspace(name: Optional[str] = None, template: Optional[str] = None,
             log_phi_init_failed_msg()
             return False
         phi_config = PhiCliConfig.from_saved_config()
-        # If phi_config is still None, throw an error
-        if not phi_config:
-            log_config_not_available_msg()
-            return False
+    # If phi_config is still None, throw an error
+    if not phi_config:
+        log_config_not_available_msg()
+        return False
 
     ws_dir_name: Optional[str] = name
     repo_to_clone: Optional[str] = url
@@ -85,7 +85,7 @@ def create_workspace(name: Optional[str] = None, template: Optional[str] = None,
             # Display available starter templates and ask user to select one
             print_info("Select starter template or press Enter for default (llm-app)")
             for template_id, template_name in enumerate(templates, start=1):
-                print_info("  [{}] {}".format(template_id, template_name))
+                print_info(f"  [{template_id}] {template_name}")
 
             # Get starter template from the user
             template_choices = [str(idx) for idx, _ in enumerate(templates, start=1)]
@@ -130,7 +130,7 @@ def create_workspace(name: Optional[str] = None, template: Optional[str] = None,
         return False
 
     print_info(f"Creating {str(ws_root_path)}")
-    logger.debug("Cloning: {}".format(repo_to_clone))
+    logger.debug(f"Cloning: {repo_to_clone}")
     try:
         _cloned_git_repo: git.Repo = git.Repo.clone_from(
             repo_to_clone,
@@ -143,16 +143,13 @@ def create_workspace(name: Optional[str] = None, template: Optional[str] = None,
 
     # Remove existing .git folder
     _dot_git_folder = ws_root_path.joinpath(".git")
-    _dot_git_exists = _dot_git_folder.exists()
-    if _dot_git_exists:
+    if _dot_git_exists := _dot_git_folder.exists():
         logger.debug(f"Deleting {_dot_git_folder}")
         try:
             _dot_git_exists = not rmdir_recursive(_dot_git_folder)
         except Exception as e:
             logger.warning(f"Failed to delete {_dot_git_folder}: {e}")
             logger.info("Please delete the .git folder manually")
-            pass
-
     phi_config.add_new_ws_to_config(ws_root_path=ws_root_path)
 
     try:
@@ -204,7 +201,7 @@ def setup_workspace(ws_root_path: Path) -> bool:
     ######################################################
     _ws_is_valid: bool = ws_root_path is not None and ws_root_path.exists() and ws_root_path.is_dir()
     if not _ws_is_valid:
-        logger.error("Invalid directory: {}".format(ws_root_path))
+        logger.error(f"Invalid directory: {ws_root_path}")
         return False
 
     ######################################################
@@ -220,9 +217,9 @@ def setup_workspace(ws_root_path: Path) -> bool:
             log_phi_init_failed_msg()
             return False
         phi_config = PhiCliConfig.from_saved_config()
-        # If phi_config is still None, throw an error
-        if not phi_config:
-            raise Exception("Failed to initialize phi")
+    # If phi_config is still None, throw an error
+    if not phi_config:
+        raise Exception("Failed to initialize phi")
 
     ######################################################
     # 1.3 Validate WorkspaceConfig is available
@@ -266,7 +263,7 @@ def setup_workspace(ws_root_path: Path) -> bool:
     # 1.5 Check if remote origin is available
     ######################################################
     git_remote_origin_url: Optional[str] = get_remote_origin_for_dir(ws_root_path)
-    logger.debug("Git origin: {}".format(git_remote_origin_url))
+    logger.debug(f"Git origin: {git_remote_origin_url}")
 
     ######################################################
     # 1.6 Create anon user if not logged in
@@ -693,9 +690,9 @@ def set_workspace_as_active(ws_dir_name: Optional[str]) -> None:
             log_phi_init_failed_msg()
             return
         phi_config = PhiCliConfig.from_saved_config()
-        # If phi_config is still None, throw an error
-        if not phi_config:
-            raise Exception("Failed to initialize phi")
+    # If phi_config is still None, throw an error
+    if not phi_config:
+        raise Exception("Failed to initialize phi")
 
     ######################################################
     # 1.2 Check ws_root_path is valid
@@ -716,7 +713,7 @@ def set_workspace_as_active(ws_dir_name: Optional[str]) -> None:
 
     ws_dir_is_valid: bool = ws_root_path is not None and ws_root_path.exists() and ws_root_path.is_dir()
     if not ws_dir_is_valid:
-        logger.error("Invalid workspace directory: {}".format(ws_root_path))
+        logger.error(f"Invalid workspace directory: {ws_root_path}")
         return
 
     ######################################################

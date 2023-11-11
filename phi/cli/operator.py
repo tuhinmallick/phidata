@@ -38,9 +38,9 @@ def authenticate_user() -> None:
     print_heading("Authenticating with phidata.com ...")
 
     auth_server_port = get_port_for_auth_server()
-    redirect_uri = "http%3A%2F%2Flocalhost%3A{}%2F".format(auth_server_port)
-    auth_url = "{}?source=cli&action=signin&redirecturi={}".format(phi_cli_settings.signin_url, redirect_uri)
-    print_info("\nYour browser will be opened to visit:\n{}".format(auth_url))
+    redirect_uri = f"http%3A%2F%2Flocalhost%3A{auth_server_port}%2F"
+    auth_url = f"{phi_cli_settings.signin_url}?source=cli&action=signin&redirecturi={redirect_uri}"
+    print_info(f"\nYour browser will be opened to visit:\n{auth_url}")
     typer_launch(auth_url)
     print_info("\nWaiting for a response from browser...\n")
 
@@ -70,7 +70,7 @@ def authenticate_user() -> None:
     else:
         phi_config.user = user
 
-    print_info("Welcome {}".format(user.email))
+    print_info(f"Welcome {user.email}")
 
 
 def initialize_phi(reset: bool = False, login: bool = False) -> bool:
@@ -162,7 +162,7 @@ def sign_in_using_cli() -> None:
     else:
         phi_config.user = user
 
-    print_info("Welcome {}".format(user.email))
+    print_info(f"Welcome {user.email}")
 
 
 def start_resources(

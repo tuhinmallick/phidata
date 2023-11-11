@@ -55,12 +55,9 @@ class TopologySpreadConstraint(K8sObject):
     when_unsatisfiable: Optional[Literal["DoNotSchedule", "ScheduleAnyway"]] = Field(None, alias="whenUnsatisfiable")
 
     def get_k8s_object(self) -> V1TopologySpreadConstraint:
-        # Return a V1TopologySpreadConstraint object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_topology_spread_constraint.py
-        _v1_topology_spread_constraint = V1TopologySpreadConstraint(
+        return V1TopologySpreadConstraint(
             label_selector=self.label_selector,
             max_skew=self.max_skew,
             topology_key=self.topology_key,
             when_unsatisfiable=self.when_unsatisfiable,
         )
-        return _v1_topology_spread_constraint

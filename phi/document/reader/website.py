@@ -54,13 +54,11 @@ class WebsiteReader(Reader):
         """
         # Try to find main content by specific tags or class names
         for tag in ["article", "main"]:
-            element = soup.find(tag)
-            if element:
+            if element := soup.find(tag):
                 return element.get_text(strip=True, separator=" ")
 
         for class_name in ["content", "main-content", "post-content"]:
-            element = soup.find(class_=class_name)
-            if element:
+            if element := soup.find(class_=class_name):
                 return element.get_text(strip=True, separator=" ")
 
         return ""
@@ -113,9 +111,7 @@ class WebsiteReader(Reader):
                 response = httpx.get(current_url, timeout=10)
                 soup = BeautifulSoup(response.content, "html.parser")
 
-                # Extract main content
-                main_content = self._extract_main_content(soup)
-                if main_content:
+                if main_content := self._extract_main_content(soup):
                     crawler_result[current_url] = main_content
                     num_links += 1
 
@@ -131,8 +127,6 @@ class WebsiteReader(Reader):
 
             except Exception as e:
                 logger.debug(f"Failed to crawl: {current_url}: {e}")
-                pass
-
         return crawler_result
 
     def read(self, url: str) -> List[Document]:

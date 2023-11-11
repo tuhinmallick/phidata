@@ -205,12 +205,11 @@ class EksNodeGroup(AwsResource):
         if scaling_config is None:
             # Build the scaling_config
             if self.min_size is not None:
-                if scaling_config is None:
-                    scaling_config = {}
-                scaling_config["minSize"] = self.min_size
-                # use min_size as the default for maxSize/desiredSize incase maxSize/desiredSize is not provided
-                scaling_config["maxSize"] = self.min_size
-                scaling_config["desiredSize"] = self.min_size
+                scaling_config = {
+                    "minSize": self.min_size,
+                    "maxSize": self.min_size,
+                    "desiredSize": self.min_size,
+                }
             if self.max_size is not None:
                 if scaling_config is None:
                     scaling_config = {}
@@ -433,12 +432,11 @@ class EksNodeGroup(AwsResource):
         if scaling_config is None:
             # Build the scaling_config
             if self.min_size is not None:
-                if scaling_config is None:
-                    scaling_config = {}
-                scaling_config["minSize"] = self.min_size
-                # use min_size as the default for maxSize/desiredSize incase maxSize/desiredSize is not provided
-                scaling_config["maxSize"] = self.min_size
-                scaling_config["desiredSize"] = self.min_size
+                scaling_config = {
+                    "minSize": self.min_size,
+                    "maxSize": self.min_size,
+                    "desiredSize": self.min_size,
+                }
             if self.max_size is not None:
                 if scaling_config is None:
                     scaling_config = {}

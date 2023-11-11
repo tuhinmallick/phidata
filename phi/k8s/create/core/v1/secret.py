@@ -29,7 +29,7 @@ class CreateSecret(CreateK8sResource):
             labels=self.labels,
         )
 
-        secret = Secret(
+        return Secret(
             name=secret_name,
             api_version=ApiVersion.CORE_V1,
             kind=Kind.SECRET,
@@ -42,8 +42,3 @@ class CreateSecret(CreateK8sResource):
             string_data=self.string_data,
             type=self.secret_type,
         )
-
-        # logger.debug(
-        #     f"Secret {secret_name}:\n{secret.json(exclude_defaults=True, indent=2)}"
-        # )
-        return secret

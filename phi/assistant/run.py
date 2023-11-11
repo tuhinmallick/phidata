@@ -146,8 +146,10 @@ class Run(BaseModel):
                 func = Function.from_callable(tool)
                 tools_for_api.append({"type": "function", "function": func.to_dict()})
             elif isinstance(tool, Agent):
-                for _f in tool.functions.values():
-                    tools_for_api.append({"type": "function", "function": _f.to_dict()})
+                tools_for_api.extend(
+                    {"type": "function", "function": _f.to_dict()}
+                    for _f in tool.functions.values()
+                )
         return tools_for_api
 
     def create(

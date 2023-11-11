@@ -62,9 +62,7 @@ class CustomResourceDefinitionNames(K8sObject):
     def get_k8s_object(
         self,
     ) -> V1CustomResourceDefinitionNames:
-        # Return a V1CustomResourceDefinitionNames object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_custom_resource_definition_names.py
-        _v1_custom_resource_definition_names = V1CustomResourceDefinitionNames(
+        return V1CustomResourceDefinitionNames(
             categories=self.categories,
             kind=self.kind,
             list_kind=self.list_kind,
@@ -72,7 +70,6 @@ class CustomResourceDefinitionNames(K8sObject):
             short_names=self.short_names,
             singular=self.singular,
         )
-        return _v1_custom_resource_definition_names
 
 
 class CustomResourceDefinitionVersion(K8sObject):
@@ -105,9 +102,7 @@ class CustomResourceDefinitionVersion(K8sObject):
     def get_k8s_object(
         self,
     ) -> V1CustomResourceDefinitionVersion:
-        # Return a V1CustomResourceDefinitionVersion object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_custom_resource_definition_version.py
-        _v1_custom_resource_definition_version = V1CustomResourceDefinitionVersion(
+        return V1CustomResourceDefinitionVersion(
             # additional_printer_columns=self.additional_printer_columns,
             deprecated=self.deprecated,
             deprecation_warning=self.deprecation_warning,
@@ -119,7 +114,6 @@ class CustomResourceDefinitionVersion(K8sObject):
             storage=self.storage,
             # subresources=self.subresources,
         )
-        return _v1_custom_resource_definition_version
 
 
 class CustomResourceDefinitionSpec(K8sObject):
@@ -150,15 +144,12 @@ class CustomResourceDefinitionSpec(K8sObject):
     def get_k8s_object(
         self,
     ) -> V1CustomResourceDefinitionSpec:
-        # Return a V1CustomResourceDefinitionSpec object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_custom_resource_definition_spec.py
-        _v1_custom_resource_definition_spec = V1CustomResourceDefinitionSpec(
+        return V1CustomResourceDefinitionSpec(
             group=self.group,
             names=self.names.get_k8s_object(),
             scope=self.scope,
             versions=[version.get_k8s_object() for version in self.versions],
         )
-        return _v1_custom_resource_definition_spec
 
 
 class CustomResourceDefinition(K8sResource):
@@ -178,15 +169,12 @@ class CustomResourceDefinition(K8sResource):
     def get_k8s_object(self) -> V1CustomResourceDefinition:
         """Creates a body for this CustomResourceDefinition"""
 
-        # Return a V1CustomResourceDefinition object to create a CustomResourceDefinition
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_custom_resource_definition.py
-        _v1_custom_resource_definition = V1CustomResourceDefinition(
+        return V1CustomResourceDefinition(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             spec=self.spec.get_k8s_object(),
         )
-        return _v1_custom_resource_definition
 
     @staticmethod
     def get_from_cluster(
@@ -200,19 +188,17 @@ class CustomResourceDefinition(K8sResource):
         """
         logger.debug("Getting CRDs from cluster")
         apiextensions_v1_api: ApiextensionsV1Api = k8s_client.apiextensions_v1_api
-        crd_list: Optional[V1CustomResourceDefinitionList] = apiextensions_v1_api.list_custom_resource_definition()
-        crds: Optional[List[V1CustomResourceDefinition]] = None
-        if crd_list:
-            crds = crd_list.items
-            # logger.debug(f"crds: {crds}")
-            # logger.debug(f"crds type: {type(crds)}")
-        return crds
+        return (
+            crd_list.items
+            if (crd_list := apiextensions_v1_api.list_custom_resource_definition())
+            else None
+        )
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         apiextensions_v1_api: ApiextensionsV1Api = k8s_client.apiextensions_v1_api
         k8s_object: V1CustomResourceDefinition = self.get_k8s_object()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         try:
             v1_custom_resource_definition: V1CustomResourceDefinition = (
                 apiextensions_v1_api.create_custom_resource_definition(
@@ -228,7 +214,7 @@ class CustomResourceDefinition(K8sResource):
                 return True
         except ValueError as e:
             # This is a K8s bug. Ref: https://github.com/kubernetes-client/python/issues/1022
-            logger.warning("Encountered known K8s bug. Exception: {}".format(e))
+            logger.warning(f"Encountered known K8s bug. Exception: {e}")
         logger.error("CustomResourceDefinition could not be created")
         return False
 
@@ -259,7 +245,7 @@ class CustomResourceDefinition(K8sResource):
         crd_name = self.get_resource_name()
         k8s_object: V1CustomResourceDefinition = self.get_k8s_object()
 
-        logger.debug("Updating: {}".format(crd_name))
+        logger.debug(f"Updating: {crd_name}")
         v1_custom_resource_definition: V1CustomResourceDefinition = (
             apiextensions_v1_api.patch_custom_resource_definition(
                 name=crd_name,
@@ -280,7 +266,7 @@ class CustomResourceDefinition(K8sResource):
         apiextensions_v1_api: ApiextensionsV1Api = k8s_client.apiextensions_v1_api
         crd_name = self.get_resource_name()
 
-        logger.debug("Deleting: {}".format(crd_name))
+        logger.debug(f"Deleting: {crd_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = apiextensions_v1_api.delete_custom_resource_definition(

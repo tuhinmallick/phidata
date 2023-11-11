@@ -18,10 +18,7 @@ class CreateK8sObject(PhiBase):
         # Get fields that are set for the base class but not the resource class
         diff_fields = {k: v for k, v in base_fields.items() if k not in resource_fields}
 
-        updated_resource = _resource.model_copy(update=diff_fields)
-        # logger.debug(f"Created resource: {updated_resource.__class__.__name__}: {updated_resource.model_dump()}")
-
-        return updated_resource
+        return _resource.model_copy(update=diff_fields)
 
 
 class CreateK8sResource(PhiBase):

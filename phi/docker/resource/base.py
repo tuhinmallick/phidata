@@ -50,7 +50,7 @@ class DockerResource(ResourceBase):
     def is_active(self, docker_client: DockerApiClient) -> bool:
         """Returns True if the active is active on the docker cluster"""
         self.active_resource = self._read(docker_client=docker_client)
-        return True if self.active_resource is not None else False
+        return self.active_resource is not None
 
     def _create(self, docker_client: DockerApiClient) -> bool:
         logger.warning(f"@_create method not defined for {self.get_resource_name()}")

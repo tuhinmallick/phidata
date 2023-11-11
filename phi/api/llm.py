@@ -26,10 +26,7 @@ def openai_chat(params: Dict[str, Any]) -> Optional[str]:
                     "params": params,
                 },
             )
-            if invalid_response(resp):
-                return None
-
-            return resp.json()
+            return None if invalid_response(resp) else resp.json()
         except Exception as e:
             logger.error(f"Error: {e}")
             logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
@@ -44,18 +41,17 @@ def openai_chat_stream(params: Dict[str, Any]) -> Iterator[str]:
             workspace_hash = get_from_env(WORKSPACE_HASH_ENV_VAR)
 
             with api_client.stream(
-                "POST",
-                ApiRoutes.OPENAI_CHAT,
-                json={
-                    "workspace": {
-                        "id_workspace": workspace_id,
-                        "ws_hash": workspace_hash,
-                    },
-                    "params": params,
-                },
-            ) as streaming_resp:
-                for chunk in streaming_resp.iter_text():
-                    yield chunk
+                            "POST",
+                            ApiRoutes.OPENAI_CHAT,
+                            json={
+                                "workspace": {
+                                    "id_workspace": workspace_id,
+                                    "ws_hash": workspace_hash,
+                                },
+                                "params": params,
+                            },
+                        ) as streaming_resp:
+                yield from streaming_resp.iter_text()
         except Exception as e:
             logger.error(f"Error: {e}")
             logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")
@@ -79,10 +75,7 @@ def openai_embedding(params: Dict[str, Any]) -> Optional[str]:
                     "params": params,
                 },
             )
-            if invalid_response(resp):
-                return None
-
-            return resp.json()
+            return None if invalid_response(resp) else resp.json()
         except Exception as e:
             logger.error(f"Error: {e}")
             logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")

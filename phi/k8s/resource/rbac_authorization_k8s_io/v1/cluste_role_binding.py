@@ -50,15 +50,12 @@ class Subject(K8sObject):
         return v.value
 
     def get_k8s_object(self) -> V1Subject:
-        # Return a V1Subject object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_subject.py
-        _v1_subject = V1Subject(
+        return V1Subject(
             api_group=self.api_group.value if self.api_group else None,
             kind=self.kind.value,
             name=self.name,
             namespace=self.namespace,
         )
-        return _v1_subject
 
 
 class RoleRef(K8sObject):
@@ -85,14 +82,11 @@ class RoleRef(K8sObject):
         return v.value
 
     def get_k8s_object(self) -> V1RoleRef:
-        # Return a V1RoleRef object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_role_ref.py
-        _v1_role_ref = V1RoleRef(
+        return V1RoleRef(
             api_group=self.api_group.value,
             kind=self.kind.value,
             name=self.name,
         )
-        return _v1_role_ref
 
 
 class ClusterRoleBinding(K8sResource):
@@ -118,20 +112,14 @@ class ClusterRoleBinding(K8sResource):
 
         subjects_list = None
         if self.subjects:
-            subjects_list = []
-            for subject in self.subjects:
-                subjects_list.append(subject.get_k8s_object())
-
-        # Return a V1ClusterRoleBinding object to create a ClusterRoleBinding
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_cluster_role_binding.py
-        _v1_cluster_role_binding = V1ClusterRoleBinding(
+            subjects_list = [subject.get_k8s_object() for subject in self.subjects]
+        return V1ClusterRoleBinding(
             api_version=self.api_version.value,
             kind=self.kind.value,
             metadata=self.metadata.get_k8s_object(),
             role_ref=self.role_ref.get_k8s_object(),
             subjects=subjects_list,
         )
-        return _v1_cluster_role_binding
 
     @staticmethod
     def get_from_cluster(
@@ -144,19 +132,17 @@ class ClusterRoleBinding(K8sResource):
             namespace: NOT USED.
         """
         rbac_auth_v1_api: RbacAuthorizationV1Api = k8s_client.rbac_auth_v1_api
-        crb_list: Optional[V1ClusterRoleBindingList] = rbac_auth_v1_api.list_cluster_role_binding()
-        crbs: Optional[List[V1ClusterRoleBinding]] = None
-        if crb_list:
-            crbs = crb_list.items
-            # logger.debug(f"crbs: {crbs}")
-            # logger.debug(f"crbs type: {type(crbs)}")
-        return crbs
+        return (
+            crb_list.items
+            if (crb_list := rbac_auth_v1_api.list_cluster_role_binding())
+            else None
+        )
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         rbac_auth_v1_api: RbacAuthorizationV1Api = k8s_client.rbac_auth_v1_api
         k8s_object: V1ClusterRoleBinding = self.get_k8s_object()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_cluster_role_binding: V1ClusterRoleBinding = rbac_auth_v1_api.create_cluster_role_binding(
             body=k8s_object,
             async_req=self.async_req,
@@ -195,7 +181,7 @@ class ClusterRoleBinding(K8sResource):
         crb_name = self.get_resource_name()
         k8s_object: V1ClusterRoleBinding = self.get_k8s_object()
 
-        logger.debug("Updating: {}".format(crb_name))
+        logger.debug(f"Updating: {crb_name}")
         v1_cluster_role_binding: V1ClusterRoleBinding = rbac_auth_v1_api.patch_cluster_role_binding(
             name=crb_name,
             body=k8s_object,
@@ -214,7 +200,7 @@ class ClusterRoleBinding(K8sResource):
         rbac_auth_v1_api: RbacAuthorizationV1Api = k8s_client.rbac_auth_v1_api
         crb_name = self.get_resource_name()
 
-        logger.debug("Deleting: {}".format(crb_name))
+        logger.debug(f"Deleting: {crb_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = rbac_auth_v1_api.delete_cluster_role_binding(
@@ -222,7 +208,7 @@ class ClusterRoleBinding(K8sResource):
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("delete_status: {}".format(delete_status.status))
+        logger.debug(f"delete_status: {delete_status.status}")
         if delete_status.status == "Success":
             logger.debug("ClusterRoleBinding Deleted")
             return True

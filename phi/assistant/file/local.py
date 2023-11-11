@@ -10,9 +10,7 @@ class LocalFile(File):
 
     @property
     def filepath(self) -> Path:
-        if isinstance(self.path, str):
-            return Path(self.path)
-        return self.path
+        return Path(self.path) if isinstance(self.path, str) else self.path
 
     def read(self) -> Any:
         logger.debug(f"Reading file: {self.filepath}")

@@ -114,7 +114,7 @@ class DockerContainer(DockerResource):
         from docker.errors import ImageNotFound, APIError
         from rich.progress import Progress
 
-        print_info("Starting container: {}".format(self.name))
+        print_info(f"Starting container: {self.name}")
         # logger.debug()(
         #     "Args: {}".format(
         #         self.json(indent=2, exclude_unset=True, exclude_none=True)
@@ -134,7 +134,7 @@ class DockerContainer(DockerResource):
                     run_container_task = progress.add_task("Running Container", total=None)  # noqa: F841
                 else:
                     run_container_task = progress.add_task("Downloading Image", total=None)  # noqa: F841
-                container_object = _api_client.containers.run(
+                return _api_client.containers.run(
                     name=self.name,
                     image=self.image,
                     command=self.command,
@@ -163,7 +163,6 @@ class DockerContainer(DockerResource):
                     working_dir=self.working_dir,
                     devices=self.devices,
                 )
-                return container_object
         except ImageNotFound as img_error:
             logger.error(f"Image {self.image} not found. Explanation: {img_error.explanation}")
             raise
@@ -181,7 +180,7 @@ class DockerContainer(DockerResource):
         """
         from docker.models.containers import Container
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         container_object: Optional[Container] = self._read(docker_client)
 
         # Delete the container if it exists
@@ -192,7 +191,7 @@ class DockerContainer(DockerResource):
         try:
             container_object = self.run_container(docker_client)
             if container_object is not None:
-                logger.debug("Container Created: {}".format(container_object.name))
+                logger.debug(f"Container Created: {container_object.name}")
             else:
                 logger.debug("Container could not be created")
         except Exception:
@@ -204,7 +203,7 @@ class DockerContainer(DockerResource):
         if container_object is not None:
             container_object.reload()
             self.container_status: str = container_object.status
-            print_info("Container Status: {}".format(self.container_status))
+            print_info(f"Container Status: {self.container_status}")
 
             if self.container_status == "running":
                 logger.debug("Container is running")
@@ -238,7 +237,7 @@ class DockerContainer(DockerResource):
         from docker import DockerClient
         from docker.models.containers import Container
 
-        logger.debug("Reading: {}".format(self.get_resource_name()))
+        logger.debug(f"Reading: {self.get_resource_name()}")
         container_name: Optional[str] = self.name
         try:
             _api_client: DockerClient = docker_client.api_client
@@ -261,7 +260,7 @@ class DockerContainer(DockerResource):
         Args:
             docker_client: The DockerApiClient for the current cluster
         """
-        logger.debug("Updating: {}".format(self.get_resource_name()))
+        logger.debug(f"Updating: {self.get_resource_name()}")
         return self._create(docker_client=docker_client)
 
     def _delete(self, docker_client: DockerApiClient) -> bool:
@@ -273,7 +272,7 @@ class DockerContainer(DockerResource):
         from docker.models.containers import Container
         from docker.errors import NotFound
 
-        logger.debug("Deleting: {}".format(self.get_resource_name()))
+        logger.debug(f"Deleting: {self.get_resource_name()}")
         container_name: Optional[str] = self.name
         container_object: Optional[Container] = self._read(docker_client)
         # Return True if there is no Container to delete
@@ -284,25 +283,25 @@ class DockerContainer(DockerResource):
         try:
             self.active_resource = None
             self.container_status = container_object.status
-            logger.debug("Container Status: {}".format(self.container_status))
-            logger.debug("Stopping Container: {}".format(container_name))
+            logger.debug(f"Container Status: {self.container_status}")
+            logger.debug(f"Stopping Container: {container_name}")
             container_object.stop()
             # If self.remove is set, then the container would be auto removed after being stopped
             # If self.remove is not set, we need to manually remove the container
             if not self.remove:
-                logger.debug("Removing Container: {}".format(container_name))
+                logger.debug(f"Removing Container: {container_name}")
                 try:
                     container_object.remove()
                 except Exception as remove_exc:
                     logger.debug(f"Could not remove container: {remove_exc}")
         except Exception as e:
-            logger.exception("Error while deleting container: {}".format(e))
+            logger.exception(f"Error while deleting container: {e}")
 
         # Validate that the Container is deleted
         logger.debug("Validating Container is deleted")
         try:
-            logger.debug("Reloading container_object: {}".format(container_object))
-            for i in range(10):
+            logger.debug(f"Reloading container_object: {container_object}")
+            for _ in range(10):
                 container_object.reload()
                 logger.debug("Waiting for NotFound Exception...")
                 sleep(1)
@@ -319,7 +318,7 @@ class DockerContainer(DockerResource):
         if container_object is not None:
             # Check if container is stopped/paused
             status: str = container_object.status
-            if status in ["exited", "paused"]:
+            if status in {"exited", "paused"}:
                 logger.debug(f"Container status: {status}")
                 return False
             return True
@@ -333,8 +332,7 @@ class DockerContainer(DockerResource):
                 print_info(f"{self.get_resource_type()}: {self.get_resource_name()} already exists")
                 return True
 
-        resource_created = self._create(docker_client=docker_client)
-        if resource_created:
+        if resource_created := self._create(docker_client=docker_client):
             print_info(f"{self.get_resource_type()}: {self.get_resource_name()} created")
             return True
         logger.error(f"Failed to create {self.get_resource_type()}: {self.get_resource_name()}")

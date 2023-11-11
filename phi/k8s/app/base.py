@@ -276,10 +276,7 @@ class K8sApp(AppBase):
         enable_https = info.data.get("enable_https")
         if v is None:
             if service_type == ServiceType.LOAD_BALANCER:
-                if enable_https:
-                    v = 443
-                else:
-                    v = 80
+                v = 443 if enable_https else 80
             elif port_number is not None:
                 v = port_number
         return v
@@ -543,7 +540,7 @@ class K8sApp(AppBase):
         # if workspace_parent_in_container is not provided
         # derive workspace_parent_in_container from workspace_root_in_container
         if workspace_parent_in_container is None:
-            workspace_parent_paths = workspace_root_in_container.split("/")[0:-1]
+            workspace_parent_paths = workspace_root_in_container.split("/")[:-1]
             workspace_parent_in_container = "/".join(workspace_parent_paths)
 
         self.container_context = ContainerContext(
@@ -552,24 +549,25 @@ class K8sApp(AppBase):
             workspace_parent=workspace_parent_in_container,
         )
 
-        if self.workspace_settings is not None and self.workspace_settings.scripts_dir is not None:
-            self.container_context.scripts_dir = f"{workspace_root_in_container}/{self.workspace_settings.scripts_dir}"
+        if self.workspace_settings is not None:
+            if self.workspace_settings.scripts_dir is not None:
+                self.container_context.scripts_dir = f"{workspace_root_in_container}/{self.workspace_settings.scripts_dir}"
 
-        if self.workspace_settings is not None and self.workspace_settings.storage_dir is not None:
-            self.container_context.storage_dir = f"{workspace_root_in_container}/{self.workspace_settings.storage_dir}"
+            if self.workspace_settings.storage_dir is not None:
+                self.container_context.storage_dir = f"{workspace_root_in_container}/{self.workspace_settings.storage_dir}"
 
-        if self.workspace_settings is not None and self.workspace_settings.workflows_dir is not None:
-            self.container_context.workflows_dir = (
-                f"{workspace_root_in_container}/{self.workspace_settings.workflows_dir}"
-            )
+            if self.workspace_settings.workflows_dir is not None:
+                self.container_context.workflows_dir = (
+                    f"{workspace_root_in_container}/{self.workspace_settings.workflows_dir}"
+                )
 
-        if self.workspace_settings is not None and self.workspace_settings.workspace_dir is not None:
-            self.container_context.workspace_dir = (
-                f"{workspace_root_in_container}/{self.workspace_settings.workspace_dir}"
-            )
+            if self.workspace_settings.workspace_dir is not None:
+                self.container_context.workspace_dir = (
+                    f"{workspace_root_in_container}/{self.workspace_settings.workspace_dir}"
+                )
 
-        if self.workspace_settings is not None and self.workspace_settings.ws_schema is not None:
-            self.container_context.workspace_schema = self.workspace_settings.ws_schema
+            if self.workspace_settings.ws_schema is not None:
+                self.container_context.workspace_schema = self.workspace_settings.ws_schema
 
         if self.requirements_file is not None:
             self.container_context.requirements_file = f"{workspace_root_in_container}/{self.requirements_file}"
@@ -621,7 +619,7 @@ class K8sApp(AppBase):
             if python_path is None:
                 python_path = container_context.workspace_root
                 if self.add_python_paths is not None:
-                    python_path = "{}:{}".format(python_path, ":".join(self.add_python_paths))
+                    python_path = f'{python_path}:{":".join(self.add_python_paths)}'
             if python_path is not None:
                 container_env[PYTHONPATH_ENV_VAR] = python_path
 

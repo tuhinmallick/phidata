@@ -77,9 +77,7 @@ class DockerImage(DockerResource):
     use_cache: bool = False
 
     def get_image_str(self) -> str:
-        if self.tag:
-            return f"{self.name}:{self.tag}"
-        return f"{self.name}:latest"
+        return f"{self.name}:{self.tag}" if self.tag else f"{self.name}:latest"
 
     def get_resource_name(self) -> str:
         return self.get_image_str()
@@ -136,18 +134,17 @@ class DockerImage(DockerResource):
                 for build_log in build_stream:
                     if build_log != last_build_log:
                         last_build_log = build_log
-                        build_log_output.append(build_log)
-
+                        build_log_output.append(last_build_log)
                     build_status: str = build_log.get("status")
                     if build_status is not None:
                         _status = build_status.lower()
-                        if _status in (
+                        if _status in {
                             "waiting",
                             "downloading",
                             "extracting",
                             "verifying checksum",
                             "pulling fs layer",
-                        ):
+                        }:
                             continue
                         if build_status != last_status:
                             logger.debug(build_status)
@@ -179,7 +176,7 @@ class DockerImage(DockerResource):
                         logger.error(f"Image build failed: {self.get_image_str()}")
                         return None
                     if build_log.get("aux", None) is not None:
-                        logger.debug("build_log['aux'] :{}".format(build_log["aux"]))
+                        logger.debug(f"""build_log['aux'] :{build_log["aux"]}""")
                         self.image_build_id = build_log.get("aux", {}).get("ID")
 
                     # Render table
@@ -258,16 +255,16 @@ class DockerImage(DockerResource):
         """
         from docker.models.images import Image
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         try:
             image_object = self.build_image(docker_client)
             if image_object is not None and isinstance(image_object, Image):
-                logger.debug("Image built: {}".format(image_object))
+                logger.debug(f"Image built: {image_object}")
                 self.active_resource = image_object
                 return True
         except Exception as e:
             logger.exception(e)
-            logger.error("Error while creating image: {}".format(e))
+            logger.error(f"Error while creating image: {e}")
             raise
 
         return False
@@ -282,12 +279,12 @@ class DockerImage(DockerResource):
         from docker.models.images import Image
         from docker.errors import ImageNotFound, NotFound
 
-        logger.debug("Reading: {}".format(self.get_image_str()))
+        logger.debug(f"Reading: {self.get_image_str()}")
         try:
             _api_client: DockerClient = docker_client.api_client
             image_object: Optional[List[Image]] = _api_client.images.get(name=self.get_image_str())
             if image_object is not None and isinstance(image_object, Image):
-                logger.debug("Image found: {}".format(image_object))
+                logger.debug(f"Image found: {image_object}")
                 self.active_resource = image_object
                 return image_object
         except (NotFound, ImageNotFound):
@@ -301,7 +298,7 @@ class DockerImage(DockerResource):
         Args:
             docker_client: The DockerApiClient for the current cluster
         """
-        logger.debug("Updating: {}".format(self.get_resource_name()))
+        logger.debug(f"Updating: {self.get_resource_name()}")
         return self._create(docker_client=docker_client)
 
     def _delete(self, docker_client: DockerApiClient) -> bool:
@@ -313,7 +310,7 @@ class DockerImage(DockerResource):
         from docker import DockerClient
         from docker.models.images import Image
 
-        logger.debug("Deleting: {}".format(self.get_resource_name()))
+        logger.debug(f"Deleting: {self.get_resource_name()}")
         image_object: Optional[Image] = self._read(docker_client)
         # Return True if there is no image to delete
         if image_object is None:
@@ -323,12 +320,12 @@ class DockerImage(DockerResource):
         # Delete Image
         try:
             self.active_resource = None
-            logger.debug("Deleting image: {}".format(self.tag))
+            logger.debug(f"Deleting image: {self.tag}")
             _api_client: DockerClient = docker_client.api_client
             _api_client.images.remove(image=self.tag, force=True)
             return True
         except Exception as e:
-            logger.exception("Error while deleting image: {}".format(e))
+            logger.exception(f"Error while deleting image: {e}")
 
         return False
 
@@ -340,8 +337,7 @@ class DockerImage(DockerResource):
                 print_info(f"{self.get_resource_type()}: {self.get_resource_name()} already exists")
                 return True
 
-        resource_created = self._create(docker_client=docker_client)
-        if resource_created:
+        if resource_created := self._create(docker_client=docker_client):
             print_info(f"{self.get_resource_type()}: {self.get_resource_name()} created")
             return True
         logger.error(f"Failed to create {self.get_resource_type()}: {self.get_resource_name()}")

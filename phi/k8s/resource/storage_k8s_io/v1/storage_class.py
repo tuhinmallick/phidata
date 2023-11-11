@@ -50,9 +50,7 @@ class StorageClass(K8sResource):
     def get_k8s_object(self) -> V1StorageClass:
         """Creates a body for this StorageClass"""
 
-        # Return a V1StorageClass object to create a StorageClass
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_storage_class.py
-        _v1_storage_class = V1StorageClass(
+        return V1StorageClass(
             allow_volume_expansion=self.allow_volume_expansion,
             api_version=self.api_version.value,
             kind=self.kind.value,
@@ -63,7 +61,6 @@ class StorageClass(K8sResource):
             reclaim_policy=self.reclaim_policy,
             volume_binding_mode=self.volume_binding_mode,
         )
-        return _v1_storage_class
 
     @staticmethod
     def get_from_cluster(
@@ -76,19 +73,17 @@ class StorageClass(K8sResource):
             namespace: Namespace to use.
         """
         storage_v1_api: StorageV1Api = k8s_client.storage_v1_api
-        sc_list: Optional[V1StorageClassList] = storage_v1_api.list_storage_class()
-        scs: Optional[List[V1StorageClass]] = None
-        if sc_list:
-            scs = sc_list.items
-            # logger.debug(f"scs: {scs}")
-            # logger.debug(f"scs type: {type(scs)}")
-        return scs
+        return (
+            sc_list.items
+            if (sc_list := storage_v1_api.list_storage_class())
+            else None
+        )
 
     def _create(self, k8s_client: K8sApiClient) -> bool:
         storage_v1_api: StorageV1Api = k8s_client.storage_v1_api
         k8s_object: V1StorageClass = self.get_k8s_object()
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         v1_storage_class: V1StorageClass = storage_v1_api.create_storage_class(
             body=k8s_object,
             async_req=self.async_req,
@@ -127,7 +122,7 @@ class StorageClass(K8sResource):
         sc_name = self.get_resource_name()
         k8s_object: V1StorageClass = self.get_k8s_object()
 
-        logger.debug("Updating: {}".format(sc_name))
+        logger.debug(f"Updating: {sc_name}")
         v1_storage_class: V1StorageClass = storage_v1_api.patch_storage_class(
             name=sc_name,
             body=k8s_object,
@@ -146,7 +141,7 @@ class StorageClass(K8sResource):
         storage_v1_api: StorageV1Api = k8s_client.storage_v1_api
         sc_name = self.get_resource_name()
 
-        logger.debug("Deleting: {}".format(sc_name))
+        logger.debug(f"Deleting: {sc_name}")
         self.active_resource = None
         # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_status.py
         delete_status: V1Status = storage_v1_api.delete_storage_class(
@@ -154,7 +149,7 @@ class StorageClass(K8sResource):
             async_req=self.async_req,
             pretty=self.pretty,
         )
-        logger.debug("delete_status: {}".format(delete_status.status))
+        logger.debug(f"delete_status: {delete_status.status}")
         if delete_status.status == "Success":
             logger.debug("StorageClass Deleted")
             return True

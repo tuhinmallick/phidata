@@ -24,7 +24,7 @@ class DockerVolume(DockerResource):
         from docker import DockerClient
         from docker.models.volumes import Volume
 
-        logger.debug("Creating: {}".format(self.get_resource_name()))
+        logger.debug(f"Creating: {self.get_resource_name()}")
         volume_name: Optional[str] = self.name
         volume_object: Optional[Volume] = None
 
@@ -37,10 +37,10 @@ class DockerVolume(DockerResource):
                 labels=self.labels,
             )
             if volume_object is not None:
-                logger.debug("Volume Created: {}".format(volume_object.name))
+                logger.debug(f"Volume Created: {volume_object.name}")
             else:
                 logger.debug("Volume could not be created")
-            # logger.debug("Volume {}".format(volume_object.attrs))
+                # logger.debug("Volume {}".format(volume_object.attrs))
         except Exception:
             raise
 
@@ -48,20 +48,19 @@ class DockerVolume(DockerResource):
         # Get the data from the volume object
         logger.debug("Validating volume is created")
         if volume_object is not None:
-            _id: str = volume_object.id
             _short_id: str = volume_object.short_id
             _name: str = volume_object.name
             _attrs: str = volume_object.attrs
-            if _id:
-                logger.debug("_id: {}".format(_id))
+            if _id := volume_object.id:
+                logger.debug(f"_id: {_id}")
                 self.id = _id
             if _short_id:
-                logger.debug("_short_id: {}".format(_short_id))
+                logger.debug(f"_short_id: {_short_id}")
                 self.short_id = _short_id
             if _name:
-                logger.debug("_name: {}".format(_name))
+                logger.debug(f"_name: {_name}")
             if _attrs:
-                logger.debug("_attrs: {}".format(_attrs))
+                logger.debug(f"_attrs: {_attrs}")
                 # TODO: use json_to_dict(_attrs)
                 self.attrs = _attrs  # type: ignore
 
@@ -75,7 +74,7 @@ class DockerVolume(DockerResource):
         from docker import DockerClient
         from docker.models.volumes import Volume
 
-        logger.debug("Reading: {}".format(self.get_resource_name()))
+        logger.debug(f"Reading: {self.get_resource_name()}")
         volume_name: Optional[str] = self.name
 
         try:
@@ -103,7 +102,7 @@ class DockerVolume(DockerResource):
         from docker.models.volumes import Volume
         from docker.errors import NotFound
 
-        logger.debug("Deleting: {}".format(self.get_resource_name()))
+        logger.debug(f"Deleting: {self.get_resource_name()}")
         volume_object: Optional[Volume] = self._read(docker_client)
         # Return True if there is no Volume to delete
         if volume_object is None:
@@ -114,12 +113,12 @@ class DockerVolume(DockerResource):
             self.active_resource = None
             volume_object.remove(force=True)
         except Exception as e:
-            logger.exception("Error while deleting volume: {}".format(e))
+            logger.exception(f"Error while deleting volume: {e}")
 
         # Validate that the volume is deleted
         logger.debug("Validating volume is deleted")
         try:
-            logger.debug("Reloading volume_object: {}".format(volume_object))
+            logger.debug(f"Reloading volume_object: {volume_object}")
             volume_object.reload()
         except NotFound:
             logger.debug("Got NotFound Exception, Volume is deleted")

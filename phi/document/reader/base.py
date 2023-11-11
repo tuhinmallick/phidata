@@ -55,9 +55,7 @@ class Reader(BaseModel):
                 end = start + self.chunk_size
 
             # If the end is greater than the content length, then set it to the content length
-            if end > content_length:
-                end = content_length
-
+            end = min(end, content_length)
             chunk = cleaned_content[start:end]
             meta_data = chunk_meta_data.copy()
             meta_data["chunk"] = chunk_number

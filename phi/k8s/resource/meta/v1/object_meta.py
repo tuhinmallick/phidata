@@ -39,14 +39,11 @@ class ObjectMeta(BaseModel):
     cluster_name: Optional[str] = Field(None, alias="clusterName")
 
     def get_k8s_object(self) -> V1ObjectMeta:
-        # Return a V1ObjectMeta object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_object_meta.py
-        _v1_object_meta = V1ObjectMeta(
+        return V1ObjectMeta(
             name=self.name,
             namespace=self.namespace,
             labels=self.labels,
             annotations=self.annotations,
         )
-        return _v1_object_meta
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

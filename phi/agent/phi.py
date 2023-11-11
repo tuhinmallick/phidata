@@ -57,8 +57,9 @@ class PhiAgent(Agent):
 
         logger.info(f"Creating: {template} at {ws_dir_name}")
         try:
-            create_successful = create_workspace(name=ws_dir_name, template=ws_template.value)
-            if create_successful:
+            if create_successful := create_workspace(
+                name=ws_dir_name, template=ws_template.value
+            ):
                 return (
                     f"Successfully created a {ws_template.value} at {ws_dir_name}. "
                     f"Ask the user if they want to start the app now."

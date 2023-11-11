@@ -135,12 +135,13 @@ class SqlConversationStorage(ConversationStorage):
                 stmt = stmt.order_by(self.table.c.created_at.desc())
                 # execute query
                 rows = sess.execute(stmt).fetchall()
-                for row in rows:
-                    if row is not None and row.id is not None:
-                        conversation_ids.append(row.id)
+                conversation_ids.extend(
+                    row.id
+                    for row in rows
+                    if row is not None and row.id is not None
+                )
         except OperationalError:
             logger.debug(f"Table does not exist: {self.table.name}")
-            pass
         return conversation_ids
 
     def get_all_conversations(self, user_name: Optional[str] = None) -> List[ConversationRow]:
@@ -155,12 +156,13 @@ class SqlConversationStorage(ConversationStorage):
                 stmt = stmt.order_by(self.table.c.created_at.desc())
                 # execute query
                 rows = sess.execute(stmt).fetchall()
-                for row in rows:
-                    if row.id is not None:
-                        conversations.append(ConversationRow.model_validate(row))
+                conversations.extend(
+                    ConversationRow.model_validate(row)
+                    for row in rows
+                    if row.id is not None
+                )
         except OperationalError:
             logger.debug(f"Table does not exist: {self.table.name}")
-            pass
         return conversations
 
     def upsert(self, conversation: ConversationRow) -> Optional[ConversationRow]:

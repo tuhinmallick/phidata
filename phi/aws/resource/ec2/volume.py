@@ -194,12 +194,7 @@ class EbsVolume(AwsResource):
         try:
             volume = None
             describe_volumes = service_client.describe_volumes(
-                Filters=[
-                    {
-                        "Name": "tag:" + self.name_tag,
-                        "Values": [self.name],
-                    },
-                ],
+                Filters=[{"Name": f"tag:{self.name_tag}", "Values": [self.name]}]
             )
             # logger.debug(f"describe_volumes: {describe_volumes}")
             for _volume in describe_volumes.get("Volumes", []):

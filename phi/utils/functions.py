@@ -12,9 +12,7 @@ def get_function_call(
     if functions is None:
         return None
 
-    function_to_call: Optional[Function] = None
-    if name in functions:
-        function_to_call = functions[name]
+    function_to_call = functions[name] if name in functions else None
     if function_to_call is None:
         logger.error(f"Function {name} not found")
         return None

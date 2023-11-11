@@ -140,7 +140,7 @@ class AwsApp(AppBase):
         if workspace_root_in_container is None:
             raise Exception("Could not determine workspace_root in container")
 
-        workspace_parent_paths = workspace_root_in_container.split("/")[0:-1]
+        workspace_parent_paths = workspace_root_in_container.split("/")[:-1]
         workspace_parent_in_container = "/".join(workspace_parent_paths)
 
         self.container_context = ContainerContext(
@@ -149,24 +149,25 @@ class AwsApp(AppBase):
             workspace_parent=workspace_parent_in_container,
         )
 
-        if self.workspace_settings is not None and self.workspace_settings.scripts_dir is not None:
-            self.container_context.scripts_dir = f"{workspace_root_in_container}/{self.workspace_settings.scripts_dir}"
+        if self.workspace_settings is not None:
+            if self.workspace_settings.scripts_dir is not None:
+                self.container_context.scripts_dir = f"{workspace_root_in_container}/{self.workspace_settings.scripts_dir}"
 
-        if self.workspace_settings is not None and self.workspace_settings.storage_dir is not None:
-            self.container_context.storage_dir = f"{workspace_root_in_container}/{self.workspace_settings.storage_dir}"
+            if self.workspace_settings.storage_dir is not None:
+                self.container_context.storage_dir = f"{workspace_root_in_container}/{self.workspace_settings.storage_dir}"
 
-        if self.workspace_settings is not None and self.workspace_settings.workflows_dir is not None:
-            self.container_context.workflows_dir = (
-                f"{workspace_root_in_container}/{self.workspace_settings.workflows_dir}"
-            )
+            if self.workspace_settings.workflows_dir is not None:
+                self.container_context.workflows_dir = (
+                    f"{workspace_root_in_container}/{self.workspace_settings.workflows_dir}"
+                )
 
-        if self.workspace_settings is not None and self.workspace_settings.workspace_dir is not None:
-            self.container_context.workspace_dir = (
-                f"{workspace_root_in_container}/{self.workspace_settings.workspace_dir}"
-            )
+            if self.workspace_settings.workspace_dir is not None:
+                self.container_context.workspace_dir = (
+                    f"{workspace_root_in_container}/{self.workspace_settings.workspace_dir}"
+                )
 
-        if self.workspace_settings is not None and self.workspace_settings.ws_schema is not None:
-            self.container_context.workspace_schema = self.workspace_settings.ws_schema
+            if self.workspace_settings.ws_schema is not None:
+                self.container_context.workspace_schema = self.workspace_settings.ws_schema
 
         if self.requirements_file is not None:
             self.container_context.requirements_file = f"{workspace_root_in_container}/{self.requirements_file}"
@@ -217,7 +218,7 @@ class AwsApp(AppBase):
             if python_path is None:
                 python_path = container_context.workspace_root
                 if self.add_python_paths is not None:
-                    python_path = "{}:{}".format(python_path, ":".join(self.add_python_paths))
+                    python_path = f'{python_path}:{":".join(self.add_python_paths)}'
             if python_path is not None:
                 container_env[PYTHONPATH_ENV_VAR] = python_path
 
@@ -247,9 +248,7 @@ class AwsApp(AppBase):
 
         load_balancer_security_groups: Optional[List[SecurityGroup]] = self.load_balancer_security_groups
         if load_balancer_security_groups is None:
-            # Create security group for the load balancer
             if self.create_load_balancer and self.create_security_groups:
-                load_balancer_security_groups = []
                 lb_sg = SecurityGroup(
                     name=f"{self.get_app_name()}-lb-security-group",
                     description=f"Security group for {self.get_app_name()} load balancer",
@@ -271,7 +270,7 @@ class AwsApp(AppBase):
                             cidr_ip="0.0.0.0/0",
                         )
                     )
-                load_balancer_security_groups.append(lb_sg)
+                load_balancer_security_groups = [lb_sg]
         return load_balancer_security_groups
 
     def security_group_definition(self) -> "SecurityGroup":
@@ -357,17 +356,19 @@ class AwsApp(AppBase):
 
         load_balancer_security_groups = self.get_load_balancer_security_groups()
         if load_balancer_security_groups is not None:
-            for lb_sg in load_balancer_security_groups:
-                if isinstance(lb_sg, SecurityGroup):
-                    security_groups.append(lb_sg)
-
+            security_groups.extend(
+                lb_sg
+                for lb_sg in load_balancer_security_groups
+                if isinstance(lb_sg, SecurityGroup)
+            )
         service_security_groups = self.get_security_groups()
         if service_security_groups is not None:
-            for sg in service_security_groups:
-                if isinstance(sg, SecurityGroup):
-                    security_groups.append(sg)
-
-        return security_groups if len(security_groups) > 0 else None
+            security_groups.extend(
+                sg
+                for sg in service_security_groups
+                if isinstance(sg, SecurityGroup)
+            )
+        return security_groups if security_groups else None
 
     def ecs_cluster_definition(self) -> "EcsCluster":
         from phi.aws.resource.ecs.cluster import EcsCluster
@@ -407,9 +408,7 @@ class AwsApp(AppBase):
         from phi.aws.resource.elb.load_balancer import LoadBalancer
 
         if self.load_balancer is None:
-            if self.create_load_balancer:
-                return self.load_balancer_definition()
-            return None
+            return self.load_balancer_definition() if self.create_load_balancer else None
         elif isinstance(self.load_balancer, LoadBalancer):
             return self.load_balancer
         else:
@@ -438,9 +437,7 @@ class AwsApp(AppBase):
         from phi.aws.resource.elb.target_group import TargetGroup
 
         if self.target_group is None:
-            if self.create_target_group:
-                return self.target_group_definition()
-            return None
+            return self.target_group_definition() if self.create_target_group else None
         elif isinstance(self.target_group, TargetGroup):
             return self.target_group
         else:
@@ -529,7 +526,7 @@ class AwsApp(AppBase):
         # -*- Get Container Command
         container_cmd: Optional[List[str]] = self.get_container_command()
         if container_cmd:
-            logger.debug("Command: {}".format(" ".join(container_cmd)))
+            logger.debug(f'Command: {" ".join(container_cmd)}')
 
         aws_region = build_context.aws_region or (
             self.workspace_settings.aws_region if self.workspace_settings else None
@@ -650,12 +647,8 @@ class AwsApp(AppBase):
 
         # -*- Get Target Group
         target_group: Optional[TargetGroup] = self.get_target_group()
-        # Point the target group to the nginx container port if:
-        # - nginx is enabled
-        # - user provided target_group is None
-        # - user provided target_group_port is None
-        if self.enable_nginx and self.target_group is None and self.target_group_port is None:
-            if target_group is not None:
+        if target_group is not None:
+            if self.enable_nginx and self.target_group is None and self.target_group_port is None:
                 target_group.port = self.nginx_container_port
 
         # -*- Get Listener
@@ -712,16 +705,14 @@ class AwsApp(AppBase):
 
         # -*- Get ECS Task Definition
         ecs_task_definition: EcsTaskDefinition = self.get_ecs_task_definition(ecs_container=ecs_container)
-        # -*- Add nginx container to ecs_task_definition if nginx is enabled
-        if self.enable_nginx:
-            if ecs_task_definition is not None:
-                if nginx_container is not None:
-                    if ecs_task_definition.containers:
-                        ecs_task_definition.containers.append(nginx_container)
-                    else:
-                        logger.error("While adding Nginx container, found TaskDefinition.containers to be None")
-                else:
+        if ecs_task_definition is not None:
+            if self.enable_nginx:
+                if nginx_container is None:
                     logger.error("While adding Nginx container, found nginx_container to be None")
+                elif ecs_task_definition.containers:
+                    ecs_task_definition.containers.append(nginx_container)
+                else:
+                    logger.error("While adding Nginx container, found TaskDefinition.containers to be None")
                 if nginx_shared_volume:
                     ecs_task_definition.volumes = [nginx_shared_volume]
 
@@ -732,9 +723,8 @@ class AwsApp(AppBase):
             target_group=target_group,
             ecs_container=ecs_container,
         )
-        # -*- Add nginx container as target_container if nginx is enabled
-        if self.enable_nginx:
-            if ecs_service is not None:
+        if ecs_service is not None:
+            if self.enable_nginx:
                 if nginx_container is not None:
                     ecs_service.target_container_name = nginx_container.name
                     ecs_service.target_container_port = self.nginx_container_port

@@ -229,5 +229,4 @@ class AcmCertificate(AwsResource):
         cert_summary = self._read(aws_client)
         if cert_summary is None:
             return None
-        cert_arn = cert_summary.get("CertificateArn", None)
-        return cert_arn
+        return cert_summary.get("CertificateArn", None)

@@ -61,20 +61,18 @@ class CreateService(CreateK8sResource):
 
         service_ports: List[ServicePort] = []
         if self.ports:
-            for _port in self.ports:
-                # logger.debug(f"Creating ServicePort for {_port}")
-                if _port.service_port is not None:
-                    service_ports.append(
-                        ServicePort(
-                            name=_port.name,
-                            port=_port.service_port,
-                            node_port=_port.node_port,
-                            protocol=_port.protocol,
-                            target_port=_port.target_port,
-                        )
-                    )
-
-        service = Service(
+            service_ports.extend(
+                ServicePort(
+                    name=_port.name,
+                    port=_port.service_port,
+                    node_port=_port.node_port,
+                    protocol=_port.protocol,
+                    target_port=_port.target_port,
+                )
+                for _port in self.ports
+                if _port.service_port is not None
+            )
+        return Service(
             name=service_name,
             api_version=ApiVersion.CORE_V1,
             kind=Kind.SERVICE,
@@ -102,8 +100,3 @@ class CreateService(CreateK8sResource):
             ),
             protocol=self.protocol,
         )
-
-        # logger.debug(
-        #     f"Service {service_name}:\n{service.json(exclude_defaults=True, indent=2)}"
-        # )
-        return service

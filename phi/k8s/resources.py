@@ -157,7 +157,7 @@ class K8sResources(InfraResources):
                         apps_to_create.append(app)
 
         # Get the list of K8sResources from the K8sApps
-        if len(apps_to_create) > 0:
+        if apps_to_create:
             logger.debug(f"Found {len(apps_to_create)} apps to create")
             for app in apps_to_create:
                 app.set_workspace_settings(workspace_settings=self.workspace_settings)
@@ -204,16 +204,10 @@ class K8sResources(InfraResources):
                             logger.debug(f"-*- Adding {dep.name}, dependency of {k8s_resource.name}")
                             final_k8s_resources.append(dep)
 
-                # Add the resource to be created after its dependencies
-                if k8s_resource not in final_k8s_resources:
-                    logger.debug(f"-*- Adding {k8s_resource.name}")
-                    final_k8s_resources.append(k8s_resource)
-            else:
-                # Add the resource to be created if it has no dependencies
-                if k8s_resource not in final_k8s_resources:
-                    logger.debug(f"-*- Adding {k8s_resource.name}")
-                    final_k8s_resources.append(k8s_resource)
-
+            # Add the resource to be created after its dependencies
+            if k8s_resource not in final_k8s_resources:
+                logger.debug(f"-*- Adding {k8s_resource.name}")
+                final_k8s_resources.append(k8s_resource)
         # Track the total number of K8sResources to create for validation
         num_resources_to_create: int = len(final_k8s_resources)
         num_resources_created: int = 0
@@ -251,9 +245,8 @@ class K8sResources(InfraResources):
                 _resource_created = resource.create(k8s_client=self.k8s_client)
                 if _resource_created:
                     num_resources_created += 1
-                else:
-                    if self.workspace_settings is not None and not self.workspace_settings.continue_on_create_failure:
-                        return num_resources_created, num_resources_to_create
+                elif self.workspace_settings is not None and not self.workspace_settings.continue_on_create_failure:
+                    return num_resources_created, num_resources_to_create
             except Exception as e:
                 logger.error(f"Failed to create {resource.get_resource_type()}: {resource.get_resource_name()}")
                 logger.error(e)
@@ -354,7 +347,7 @@ class K8sResources(InfraResources):
                         apps_to_delete.append(app)
 
         # Get the list of K8sResources from the K8sApps
-        if len(apps_to_delete) > 0:
+        if apps_to_delete:
             logger.debug(f"Found {len(apps_to_delete)} apps to delete")
             for app in apps_to_delete:
                 app.set_workspace_settings(workspace_settings=self.workspace_settings)
@@ -414,11 +407,9 @@ class K8sResources(InfraResources):
                         if dep not in final_k8s_resources:
                             logger.debug(f"-*- Adding {dep.name}, dependency of {k8s_resource.name}")
                             final_k8s_resources.append(dep)
-            else:
-                # Add the resource to be deleted if it has no dependencies
-                if k8s_resource not in final_k8s_resources:
-                    logger.debug(f"-*- Adding {k8s_resource.name}")
-                    final_k8s_resources.append(k8s_resource)
+            elif k8s_resource not in final_k8s_resources:
+                logger.debug(f"-*- Adding {k8s_resource.name}")
+                final_k8s_resources.append(k8s_resource)
 
         # Track the total number of K8sResources to delete for validation
         num_resources_to_delete: int = len(final_k8s_resources)
@@ -457,9 +448,8 @@ class K8sResources(InfraResources):
                 _resource_deleted = resource.delete(k8s_client=self.k8s_client)
                 if _resource_deleted:
                     num_resources_deleted += 1
-                else:
-                    if self.workspace_settings is not None and not self.workspace_settings.continue_on_delete_failure:
-                        return num_resources_deleted, num_resources_to_delete
+                elif self.workspace_settings is not None and not self.workspace_settings.continue_on_delete_failure:
+                    return num_resources_deleted, num_resources_to_delete
             except Exception as e:
                 logger.error(f"Failed to delete {resource.get_resource_type()}: {resource.get_resource_name()}")
                 logger.error(e)
@@ -561,7 +551,7 @@ class K8sResources(InfraResources):
                         apps_to_update.append(app)
 
         # Get the list of K8sResources from the K8sApps
-        if len(apps_to_update) > 0:
+        if apps_to_update:
             logger.debug(f"Found {len(apps_to_update)} apps to update")
             for app in apps_to_update:
                 app.set_workspace_settings(workspace_settings=self.workspace_settings)
@@ -608,16 +598,10 @@ class K8sResources(InfraResources):
                             logger.debug(f"-*- Adding {dep.name}, dependency of {k8s_resource.name}")
                             final_k8s_resources.append(dep)
 
-                # Add the resource to be created after its dependencies
-                if k8s_resource not in final_k8s_resources:
-                    logger.debug(f"-*- Adding {k8s_resource.name}")
-                    final_k8s_resources.append(k8s_resource)
-            else:
-                # Add the resource to be created if it has no dependencies
-                if k8s_resource not in final_k8s_resources:
-                    logger.debug(f"-*- Adding {k8s_resource.name}")
-                    final_k8s_resources.append(k8s_resource)
-
+            # Add the resource to be created after its dependencies
+            if k8s_resource not in final_k8s_resources:
+                logger.debug(f"-*- Adding {k8s_resource.name}")
+                final_k8s_resources.append(k8s_resource)
         # Track the total number of K8sResources to update for validation
         num_resources_to_update: int = len(final_k8s_resources)
         num_resources_updated: int = 0
@@ -655,9 +639,8 @@ class K8sResources(InfraResources):
                 _resource_updated = resource.update(k8s_client=self.k8s_client)
                 if _resource_updated:
                     num_resources_updated += 1
-                else:
-                    if self.workspace_settings is not None and not self.workspace_settings.continue_on_patch_failure:
-                        return num_resources_updated, num_resources_to_update
+                elif self.workspace_settings is not None and not self.workspace_settings.continue_on_patch_failure:
+                    return num_resources_updated, num_resources_to_update
             except Exception as e:
                 logger.error(f"Failed to update {resource.get_resource_type()}: {resource.get_resource_name()}")
                 logger.error(e)
@@ -760,7 +743,7 @@ class K8sResources(InfraResources):
                         apps_to_save.append(app)
 
         # Get the list of K8sResources from the K8sApps
-        if len(apps_to_save) > 0:
+        if apps_to_save:
             logger.debug(f"Found {len(apps_to_save)} apps to save")
             for app in apps_to_save:
                 app.set_workspace_settings(workspace_settings=self.workspace_settings)
@@ -807,16 +790,10 @@ class K8sResources(InfraResources):
                             logger.debug(f"-*- Adding {dep.name}, dependency of {k8s_resource.name}")
                             final_k8s_resources.append(dep)
 
-                # Add the resource to be saved after its dependencies
-                if k8s_resource not in final_k8s_resources:
-                    logger.debug(f"-*- Adding {k8s_resource.name}")
-                    final_k8s_resources.append(k8s_resource)
-            else:
-                # Add the resource to be saved if it has no dependencies
-                if k8s_resource not in final_k8s_resources:
-                    logger.debug(f"-*- Adding {k8s_resource.name}")
-                    final_k8s_resources.append(k8s_resource)
-
+            # Add the resource to be saved after its dependencies
+            if k8s_resource not in final_k8s_resources:
+                logger.debug(f"-*- Adding {k8s_resource.name}")
+                final_k8s_resources.append(k8s_resource)
         # Track the total number of K8sResources to save for validation
         num_resources_to_save: int = len(final_k8s_resources)
         num_resources_saved: int = 0

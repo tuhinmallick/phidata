@@ -57,9 +57,7 @@ class Volume(K8sObject):
     secret: Optional[SecretVolumeSource] = None
 
     def get_k8s_object(self) -> V1Volume:
-        # Return a V1Volume object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_volume.py
-        _v1_volume = V1Volume(
+        return V1Volume(
             name=self.name,
             aws_elastic_block_store=self.aws_elastic_block_store.get_k8s_object()
             if self.aws_elastic_block_store
@@ -68,7 +66,9 @@ class Volume(K8sObject):
             # azure_file=None,
             # cephfs=None,
             # cinder=None,
-            config_map=self.config_map.get_k8s_object() if self.config_map else None,
+            config_map=self.config_map.get_k8s_object()
+            if self.config_map
+            else None,
             # csi=None,
             # downward_api=None,
             empty_dir=self.empty_dir.get_k8s_object() if self.empty_dir else None,
@@ -76,7 +76,9 @@ class Volume(K8sObject):
             # fc=None,
             # flex_volume=None,
             # flocker=None,
-            gce_persistent_disk=self.gce_persistent_disk.get_k8s_object() if self.gce_persistent_disk else None,
+            gce_persistent_disk=self.gce_persistent_disk.get_k8s_object()
+            if self.gce_persistent_disk
+            else None,
             git_repo=self.git_repo.get_k8s_object() if self.git_repo else None,
             # glusterfs=None,
             host_path=self.host_path.get_k8s_object() if self.host_path else None,
@@ -95,4 +97,3 @@ class Volume(K8sObject):
             # storageos=None,
             # vsphere_volume=None,
         )
-        return _v1_volume

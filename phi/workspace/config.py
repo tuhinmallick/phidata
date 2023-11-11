@@ -197,7 +197,10 @@ class WorkspaceConfig(BaseModel):
                 workspace_dir_path_parts = workspace_dir_path.parts
                 resource_file_parts_after_ws = resource_file_parts[len(workspace_dir_path_parts) :]
                 # Check if file in ignored directory
-                if any([ignored_dir in resource_file_parts_after_ws for ignored_dir in ignored_dirs]):
+                if any(
+                    ignored_dir in resource_file_parts_after_ws
+                    for ignored_dir in ignored_dirs
+                ):
                     logger.debug(f"Skipping file in ignored directory: {resource_file}")
                     continue
                 logger.debug(f"Reading file: {resource_file}")
@@ -284,10 +287,11 @@ class WorkspaceConfig(BaseModel):
         if env is None:
             env_filtered_resource_groups = filtered_infra_resources
         else:
-            for resource_group in filtered_infra_resources:
-                if resource_group.env == env:
-                    env_filtered_resource_groups.append(resource_group)
-
+            env_filtered_resource_groups.extend(
+                resource_group
+                for resource_group in filtered_infra_resources
+                if resource_group.env == env
+            )
         # Updated resource groups with the workspace settings
         if self._workspace_settings is None:
             # TODO: Create a temporary workspace settings object
@@ -306,7 +310,7 @@ class WorkspaceConfig(BaseModel):
             raise FileNotFoundError(f"File {resource_file} does not exist")
         if not resource_file.is_file():
             raise ValueError(f"Path {resource_file} is not a file")
-        if not resource_file.suffix == ".py":
+        if resource_file.suffix != ".py":
             raise ValueError(f"File {resource_file} is not a python file")
 
         from sys import path as sys_path
@@ -413,10 +417,11 @@ class WorkspaceConfig(BaseModel):
         if env is None:
             env_filtered_resource_groups = filtered_infra_resources
         else:
-            for resource_group in filtered_infra_resources:
-                if resource_group.env == env:
-                    env_filtered_resource_groups.append(resource_group)
-
+            env_filtered_resource_groups.extend(
+                resource_group
+                for resource_group in filtered_infra_resources
+                if resource_group.env == env
+            )
         # Updated resource groups with the workspace settings
         if temporary_ws_config._workspace_settings is None:
             # Create a temporary workspace settings object

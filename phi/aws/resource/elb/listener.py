@@ -223,11 +223,7 @@ class Listener(AwsResource):
 
     def get_arn(self, aws_client: AwsApiClient) -> Optional[str]:
         listener = self._read(aws_client)
-        if listener is None:
-            return None
-
-        listener_arn = listener.get("ListenerArn", None)
-        return listener_arn
+        return None if listener is None else listener.get("ListenerArn", None)
 
     def get_load_balancer_arn(self, aws_client: AwsApiClient):
         load_balancer_arn = self.load_balancer_arn
@@ -258,10 +254,10 @@ class Listener(AwsResource):
 
         certificates = self.certificates
         if certificates is None and self.acm_certificates is not None and len(self.acm_certificates) > 0:
-            certificates = []
-            for cert in self.acm_certificates:
-                certificates.append({"CertificateArn": cert.get_certificate_arn(aws_client)})
-
+            certificates = [
+                {"CertificateArn": cert.get_certificate_arn(aws_client)}
+                for cert in self.acm_certificates
+            ]
         return certificates
 
     def get_listener_tags(self):

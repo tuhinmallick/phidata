@@ -66,27 +66,26 @@ def conversation_chat(
             logger.debug("--o-o-- Streaming Conversation Chat")
             try:
                 with api_client.stream(
-                    "POST",
-                    ApiRoutes.AI_CONVERSATION_CHAT,
-                    json={
-                        "user": user.model_dump(include={"id_user", "email"}),
-                        "conversation": {
-                            "id": conversation_id,
-                            "message": message.model_dump(exclude_none=True),
-                            "type": conversation_type,
-                            "client": ConversationClient.CLI,
-                            "functions": {
-                                k: v.model_dump(include={"name", "description", "parameters"})
-                                for k, v in functions.items()
-                            }
-                            if functions is not None
-                            else None,
-                            "stream": stream,
-                        },
-                    },
-                ) as streaming_resp:
-                    for chunk in streaming_resp.iter_text():
-                        yield chunk
+                                    "POST",
+                                    ApiRoutes.AI_CONVERSATION_CHAT,
+                                    json={
+                                        "user": user.model_dump(include={"id_user", "email"}),
+                                        "conversation": {
+                                            "id": conversation_id,
+                                            "message": message.model_dump(exclude_none=True),
+                                            "type": conversation_type,
+                                            "client": ConversationClient.CLI,
+                                            "functions": {
+                                                k: v.model_dump(include={"name", "description", "parameters"})
+                                                for k, v in functions.items()
+                                            }
+                                            if functions is not None
+                                            else None,
+                                            "stream": stream,
+                                        },
+                                    },
+                                ) as streaming_resp:
+                    yield from streaming_resp.iter_text()
             except Exception as e:
                 logger.error(f"Error: {e}")
                 logger.info("Please message us on https://discord.gg/4MtYHHrgA8 for help.")

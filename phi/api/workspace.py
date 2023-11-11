@@ -208,9 +208,10 @@ def log_workspace_event(user: UserSchema, workspace_event: WorkspaceEvent) -> bo
             if response_json is None:
                 return False
 
-            if isinstance(response_json, dict) and response_json.get("status") == "success":
-                return True
-            return False
+            return (
+                isinstance(response_json, dict)
+                and response_json.get("status") == "success"
+            )
         except Exception as e:
             logger.debug(f"Could not log workspace wvent: {e}")
     return False

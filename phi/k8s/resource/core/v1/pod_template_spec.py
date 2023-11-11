@@ -17,10 +17,7 @@ class PodTemplateSpec(K8sObject):
     spec: PodSpec
 
     def get_k8s_object(self) -> V1PodTemplateSpec:
-        # Return a V1PodTemplateSpec object
-        # https://github.com/kubernetes-client/python/blob/master/kubernetes/client/models/v1_pod_template_spec.py
-        _v1_pod_template_spec = V1PodTemplateSpec(
+        return V1PodTemplateSpec(
             metadata=self.metadata.get_k8s_object(),
             spec=self.spec.get_k8s_object(),
         )
-        return _v1_pod_template_spec

@@ -201,11 +201,7 @@ class DuckDbAgent(Agent):
             table_name = table_name.replace("-", "_").replace(".", "_").replace(" ", "_").replace("/", "_")
 
         select_statement = f"SELECT * FROM read_csv('{path}'"
-        if delimiter is not None:
-            select_statement += f", delim='{delimiter}')"
-        else:
-            select_statement += ")"
-
+        select_statement += f", delim='{delimiter}')" if delimiter is not None else ")"
         create_statement = f"CREATE OR REPLACE TABLE '{table_name}' AS {select_statement};"
         self.run_query(create_statement)
 
@@ -261,11 +257,7 @@ class DuckDbAgent(Agent):
             table_name = table_name.replace("-", "_").replace(".", "_").replace(" ", "_").replace("/", "_")
 
         select_statement = f"SELECT * FROM read_csv('{s3_path}'"
-        if delimiter is not None:
-            select_statement += f", delim='{delimiter}')"
-        else:
-            select_statement += ")"
-
+        select_statement += f", delim='{delimiter}')" if delimiter is not None else ")"
         create_statement = f"CREATE OR REPLACE TABLE '{table_name}' AS {select_statement};"
         self.run_query(create_statement)
 

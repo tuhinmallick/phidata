@@ -230,8 +230,7 @@ class EcsTaskDefinition(AwsResource):
             # Get the task definition revisions
             list_response = service_client.list_task_definitions(familyPrefix=self.get_task_family(), sort="DESC")
             logger.debug(f"EcsTaskDefinition: {list_response}")
-            task_definition_arns = list_response.get("taskDefinitionArns", [])
-            if task_definition_arns:
+            if task_definition_arns := list_response.get("taskDefinitionArns", []):
                 # Delete all revisions
                 for task_definition_arn in task_definition_arns:
                     service_client.deregister_task_definition(taskDefinition=task_definition_arn)
